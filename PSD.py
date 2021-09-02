@@ -101,7 +101,7 @@ y = (hs/2) - (h/2) - 45
 root.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
 
 root.resizable(width=False,height=False)
-root.title('Weekly Report')
+root.title('Weekly Report V.1.0')
 root.iconbitmap(r'icon_title.ico')
 def Exit():
 
@@ -116,6 +116,7 @@ root.config(menu=menuber)
 # File menu
 filemenu = Menu(menuber,tearoff=0) # tearoff=0 ปิดฟังก์ชั่นย่อย
 menuber.add_cascade(label='File',menu=filemenu) # add label file menuber
+filemenu.add_command(label='Plot Grahp',command=pivot_table_1)
 filemenu.add_command(label='Exit',command=Exit)
 
 
@@ -168,7 +169,6 @@ def Save(event=None):
 				# with คือ คำสั่งเปิดไฟล์แล้วปิดอัตโนมัติ
 				# 'a' คือ การบันทึกไปเรื่อยๆ เพิ่มข้อมูลจากข้อมูลเก่า แต่ถ้า w  เคลียค่าเก่าแล้วบันทึกใหม่
 				# newline='' คือการทำให้ข้อมูลไม่มีบรรทัดว่าง
-
 				fw = csv.writer(f) # สร้างฟังก์ชั่นสำหรับเขียนข้อมูล
 				data = [textdate,my_station,my_bound,my_door,my_time,my_failure,
 										my_cause,my_Maintenance,my_workorder,my_qty] # เอา Transection ID มาใส่ ใน treeview
@@ -227,14 +227,14 @@ Mainicon = Label(F1,image=Main_icon)
 Mainicon.pack()
 
  ############## T1 ###############
-L1 = ttk.Label(F1,text='Work order',font=FONT1,foreground='green')
+L1 = ttk.Label(F1,text=f'{"Work order":^{15}}',font=FONT1,foreground='green')
 L1.pack(ipadx=15)
 
 E1_work = StringVar()
 E1 = ttk.Entry(F1,textvariable=E1_work,font=FONT1)
 E1.pack(ipadx=27)
 
-L2 = ttk.Label(F1,text='Time',font=FONT1,foreground='green')
+L2 = ttk.Label(F1,text=f'{"Time":^{20}}',font=FONT1,foreground='green')
 L2.pack(ipadx=15)
 
 E2_time = StringVar()
@@ -384,16 +384,22 @@ qtychoosen.current(0)
 
 ############## T2 ###############
 
-LT2 = ttk.Label(F2,text='ตารางรางแสดงข้อมูล',font=FONT1,foreground='green')
+LT2 = ttk.Label(F2,text=f'{"ตารางรางแสดงข้อมูล":>{5}}',font=FONT1,foreground='green')
 LT2.pack(pady=20)
 
 Main_icon2 = PhotoImage(file='MainiconT2.png')
 Mainicon2 = Label(F2,image=Main_icon2)
 Mainicon2.pack()
 
+s = ttk.Style(F2)
+s.theme_use("clam")
+
+s.configure(".",font=('Helvetica',10))
+s.configure("Treeview.Heading",foreground='red',font=('Helvetica',8,"bold"))
+
 
 header = ['Date','Station','Bound','Door','Time','Failure log','Cause','Resolution','Work order','QTY'] # สร้างHeader
-headerwidth = [67,60,60,60,60,160,130,80,80,30]
+headerwidth = [80,60,60,60,60,200,200,110,80,30]
 
 resulttable = ttk.Treeview(F2,columns=header,show='headings',height=15) # สร้างTreeview height = 10 คือ จำนวนบรรทัดใน Treeview
 resulttable.pack(pady=20)
@@ -407,8 +413,14 @@ for h,w in zip(header,headerwidth):
 #resulttable.insert('','end',value=['31/08/2021','CEN','EB','D10','10:30:21','AMC_S: Obstacle Detection','The door can not open','Reset DCU',
 				#			'600100200','1'])  # ถ้าเป็น end อังคาร์จะขึ้นก่อนในตาราง
 
-B2 = ttk.Button(F2,text=f'{"    ":>{10}}',image=btg,compound='left',command=pivot_table_1) #### ให้ไปเรียก function Edit
-B2.pack()
+hsb = ttk.Scrollbar(F2,orient="horizontal")
+hsb.configure(command=resulttable.xview)
+resulttable.configure(xscrollcommand=hsb.set)
+hsb.pack(fill=X,side=BOTTOM)
+
+
+#B2 = ttk.Button(F2,text=f'{"":>{5}}',image=btg,compound='left',command=pivot_table_1) #### ให้ไปเรียก function Edit
+#B2.pack()
 
 def Delete(event=None):
 	check = messagebox.askyesno('Confirm','คุณต้องการลบข้อมูลหรือไม่ ?')
