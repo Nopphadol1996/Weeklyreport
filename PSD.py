@@ -3,9 +3,6 @@ from tkinter import ttk,messagebox
 import csv
 import pandas as pd
 import matplotlib.pyplot as plt
-
-# basicsqlite3.py
-
 import sqlite3
 
 ######### DB #####################
@@ -26,6 +23,58 @@ c.execute("""CREATE TABLE IF NOT EXISTS weeklytable (
 				Work INTEGER,
 				QTY INTEGER
 			)""")
+def insert_week_station(station,qty,week): # เอาที่เราสร้างมาใส่
+	ID = None
+	with conn:
+		c.execute("""INSERT INTO plotstation VALUES (?,?,?,?)""", # ? ต้องรวม ID = None
+			(ID,station,qty,week)) #ใส่ ID ไปด้วย
+		conn.commit() # คือ การบันทึกข้อมูลลงในฐานข้อมูล ถ้าไม่รันตัวนี้จะไม่บันทึก
+		print('Insert Sucess...!')
+'''
+insert_week_station('N2',0,'week13')
+insert_week_station('N3',0,'week13')
+insert_week_station('E1',1,'week13')
+insert_week_station('E4',10,'week13')
+insert_week_station('E5',0,'week13')
+insert_week_station('E6',2,'week13')
+insert_week_station('E9',0,'week13')
+insert_week_station('S2',0,'week13')
+insert_week_station('S3',0,'week13')
+insert_week_station('S5',0,'week13')
+insert_week_station('CEN',2,'week13')
+'''
+
+def show_station_week():
+	with conn:
+		c.execute("SELECT *FROM plotstation")
+		verywek = c.fetchall() # คำสั่งให้ดึงข้อมูลมา
+		print(veryweek)
+	return veryweek
+
+def plot_station():
+	df =pd.read_sql_query("SELECT * FROM plotstation",conn,)
+	del df['ID']
+
+	print(df)
+
+	a = df.pivot_table(index='station',columns='week',values='qty')
+
+	a.plot(kind='bar',stacked=True,figsize=(12,6))
+
+	plt.ylim(0,41)
+	plt.grid(axis = 'y')
+	plt.title('Station Report',color='green')
+	plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,fontsize=7)
+
+	plt.show()
+
+c.execute("""CREATE TABLE IF NOT EXISTS plotstation (
+				ID INTEGER PRIMARY KEY AUTOINCREMENT,
+				station TEXT,
+				qty INTEGER,
+				week TEXT
+			)""")
+
 
 def insert_work(Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY): # เอาที่เราสร้างมาใส่
 	ID = None
@@ -57,19 +106,16 @@ def pivot_table_1():
 		df =pd.read_sql_query("SELECT * FROM weeklytable",conn,)
 		del df['Work']
 		del df['ID']
-		#print(df)
-		'''
-		df.pivot_table(index=['Station','Bound','Door'], columns ='Cause',values='QTY',fill_value=0,
-						).plot(kind='bar',fontsize=15)'''
 
-		df.pivot_table(index=['Station','Bound','Door'], columns ='Cause',values='QTY', aggfunc='count',fill_value=0,
-	              margins=False, margins_name='Grand Total').plot(kind='bar',fontsize=15)
+		df.pivot_table(index=['Station','Bound','Door'], columns ='Cause',values='QTY',
+	              margins=False, margins_name='Grand Total').plot(kind='bar',fontsize=15,stacked=True)
 
 
 		plt.title('Weekly Report',color='green')
 		plt.ylabel('Total Failure',color='green')
 
-		plt.ylim(0,5)
+		plt.ylim(0,10)
+		plt.grid(axis = 'y')
 		plt.show()
 
 	except Exception as e:
@@ -100,7 +146,7 @@ x = (ws/2) - (w/2) # ws คือความกว้างของหน้�
 y = (hs/2) - (h/2) - 45
 root.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
 
-root.resizable(width=False,height=False)
+#Froot.resizable(width=False,height=False) #### ปิดขยายหน้าจอ
 root.title('Weekly Report V.1.0')
 root.iconbitmap(r'icon_title.ico')
 def Exit():
@@ -200,7 +246,7 @@ Tab.pack(fill=BOTH,expand=1)
 
 icon_t1 = PhotoImage(file='T1.png') # .subsample(2) ย่อขนาดลง2เท่าใช้ได้กับรูป png เท่านั้น
 icon_t2 = PhotoImage(file='T2.png')
-#icon_b1 = PhotoImage(file='button_save.png')
+icon_b1 = PhotoImage(file='button_save.png')
 btg = PhotoImage(file='button_graph.png')
 
 
@@ -214,8 +260,8 @@ my_label.place(x=0,y=0,relwidth=1,relheight=1)
 
 F1 = Frame(T1)
 F2 = Frame(T2)
-#F1.pack()
-F1.place(x=220,y=50) # control ระยะ
+F1.pack()
+#F1.place(x=220,y=50) # control ระยะ
 F2.pack()
 ############### สร้าง TAB ###################
 FONT1 = (None,18) # None เปลี่ยนเป็น 'Angsana New'
@@ -246,133 +292,100 @@ days = StringVar()
 dayschoosen = ttk.Combobox(F1, width = 50, 
                             textvariable = days,state='readonly')
   
-# Adding combobox drop down list
 dayschoosen['values'] = ('days', 
                           '01','02','03','04','05','06','07','08','09','10',
                           '11','12','13','14','15','16','17','18','19','20',
                           '21','22','23','24','25','26','27','28','29','30','31')
 dayschoosen.pack(pady=7)
- # Shows february as a default value
 dayschoosen.current(0)
-############## day ###############
 
 ############## months ###############
 months = StringVar()
 monthschoosen = ttk.Combobox(F1, width = 50, 
                             textvariable = months,state='readonly')
-  
-# Adding combobox drop down list
 monthschoosen['values'] = ('months','01','02','03','04','05','06','07','08','09','10','11','12')
 monthschoosen.pack(pady=2)
- # Shows february as a default value
 monthschoosen.current(0)
-############## months ###############
 
 ############## years ###############
 years = StringVar()
 yearschoosen = ttk.Combobox(F1, width = 50, 
                             textvariable = years,state='readonly')
   
-# Adding combobox drop down list
 yearschoosen['values'] = ('years','2020','2021','2022','2023','2024', '2025', '2026', '2027', '2028', 
                           '2029', '2030')
 
 yearschoosen.pack(pady=2)
- # Shows february as a default value
 yearschoosen.current(0)
-############## years ###############
 
 ############## Station ###############
 Station = StringVar()
 Stationchoosen = ttk.Combobox(F1, width = 50, 
                             textvariable = Station,state='readonly')
   
-# Adding combobox drop down list
 Stationchoosen['values'] = ('Station', 'E1','E4','E5','E6','E9','CEN','N2','N3','S2','S3','S5')
 Stationchoosen.pack(pady=2)
- # Shows february as a default value
 Stationchoosen.current(0)
-############## Station ###############
 
 ############## Bound ###############
 Bound = StringVar()
 Boundchoosen = ttk.Combobox(F1, width = 50,textvariable=Bound,state='readonly')
-  
-# Adding combobox drop down list
 Boundchoosen['values'] = ('Bound', 
                           'EB',
                           'NB',
                           'SB',
                           'WB')
 Boundchoosen.pack(pady=2)
- # Shows february as a default value
 Boundchoosen.current(0)
-############## Bound ###############
 
 ############## Door ###############
 Doors = StringVar()
 Doorchoosen = ttk.Combobox(F1, width = 50, 
                             textvariable = Doors,state='readonly')
-  
-# Adding combobox drop down list
 Doorchoosen['values'] = ('Door', 
                           'D01','D02','D03','D04','D05','D06','D07',
                           'D08','D09','D10','D11','D12','D13','D14',
                           'D15','D16','D17','D18','D19','D20','D21','D22','D23','D24')
 Doorchoosen.pack(pady=2)
- # Shows february as a default value
 Doorchoosen.current(0)
-############## Door ###############
-
-############## Failure ###############
 Failure = StringVar()
 Failurechoosen = ttk.Combobox(F1, width = 50,textvariable=Failure,state='readonly')
-  
-# Adding combobox drop down list
-Failurechoosen['values'] = ('Failure log', 
+Failurechoosen['values'] = ('Failure log',
+					 'AMC_M: Obstacle Detection ,DMC:Obstacle Detection inconsistency between DMC_AMC M and AMC S',
                           'AMC_S: Obstacle Detection',
+                          'AMC_S: Reset AMC_M:Reset',
                           'DMC:ASD close too slow')
 Failurechoosen.pack(pady=2)
- # Shows february as a default value
 Failurechoosen.current(0)
-############## Failure ##############
-
 ############## Cause ###############
 Cause = StringVar()
 Causeechoosen = ttk.Combobox(F1, width = 50,textvariable=Cause,state='readonly')
-  
-# Adding combobox drop down list
-Causeechoosen['values'] = ('Cause', 
-                          'Door not open',
-                          'Door closed too slow')
+Causeechoosen['values'] = ('Cause',
+					 'Software error',
+					 'The door(m) obstacle',
+					 'The door(m)not open',
+					 'The door(s)not open',
+					 'The door(s)not closed',
+                          'The door not open',
+                          'The door closed too slow')
 Causeechoosen.pack(pady=2)
- # Shows february as a default value
 Causeechoosen.current(0)
-############## Cause ###############
 
 ############## Maintenance ###############
 Maintenance = StringVar()
 Maintenancechoosen = ttk.Combobox(F1, width = 50,textvariable=Maintenance,state='readonly')
-  
-# Adding combobox drop down list
 Maintenancechoosen['values'] = ('Action', 
                           'Reset DCU',
                           'Replace DCU')
 Maintenancechoosen.pack(pady=2)
- # Shows february as a default value
 Maintenancechoosen.current(0)
-############## Maintenance ###############
-
 ############## QTY ###############
 qty = StringVar()
 qtychoosen = ttk.Combobox(F1, width = 50,textvariable=qty,state='readonly')
-  
-# Adding combobox drop down list
 qtychoosen['values'] = ('QTY',
                           '0',
                           '1')
 qtychoosen.pack(pady=2)
- # Shows february as a default value
 qtychoosen.current(0)
 
 ############## QTY ###############
@@ -380,7 +393,6 @@ qtychoosen.current(0)
 #B1 = ttk.Button(F1,text=f'{"Save":>{10}}',image=icon_b1,compound='left',command=Save) #### ให้ไปเรียก function Save
 #B1.place(x=310,y=580)
 #B1.pack(pady=5)
-
 
 ############## T2 ###############
 
@@ -394,15 +406,15 @@ Mainicon2.pack()
 s = ttk.Style(F2)
 s.theme_use("clam")
 
-s.configure(".",font=('Helvetica',10))
+s.configure(".",font=('Angsana New',14))
 s.configure("Treeview.Heading",foreground='red',font=('Helvetica',8,"bold"))
 
 
 header = ['Date','Station','Bound','Door','Time','Failure log','Cause','Resolution','Work order','QTY'] # สร้างHeader
-headerwidth = [80,60,60,60,60,200,200,110,80,30]
+headerwidth = [70,50,50,45,50,550,200,110,80,30]
 
-resulttable = ttk.Treeview(F2,columns=header,show='headings',height=15) # สร้างTreeview height = 10 คือ จำนวนบรรทัดใน Treeview
-resulttable.pack(pady=20)
+resulttable = ttk.Treeview(F2,columns=header,show='headings',height=13) # สร้างTreeview height = 10 คือ จำนวนบรรทัดใน Treeview
+resulttable.pack(pady=10)
  
 for h in header:
 	resulttable.heading(h,text=h) # นำ ข้อมูลใน list header ไปใส่ใน Treeview
@@ -445,6 +457,7 @@ def Delete(event=None):
 rightclick = Menu(root,tearoff=0)
 rightclick.add_command(label='Delete',command=Delete) # ไปเรียก function Delete
 resulttable.bind('<Delete>',Delete) # กดปุ่ม Delete เพื่อลบข้อมูล
+
 
 def menupopup(event=None): # ใส่ Event ด้วยจ๊ะ
 
