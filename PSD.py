@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sqlite3
 
+
 ######### DB #####################
 conn = sqlite3.connect('Weekly.db')
 # สร้างตัวดำเนินการ (อยากได้อะไรใช้ตัวนี้ได้เลย)
@@ -23,39 +24,38 @@ c.execute("""CREATE TABLE IF NOT EXISTS weeklytable (
 				Work INTEGER,
 				QTY INTEGER
 			)""")
+
+c.execute("""CREATE TABLE IF NOT EXISTS plotstation (
+				ID INTEGER PRIMARY KEY AUTOINCREMENT,
+				station TEXT,
+				qty INTEGER,
+				week TEXT
+			)""")
+
+
+
 def insert_week_station(station,qty,week): # เอาที่เราสร้างมาใส่
 	ID = None
 	with conn:
 		c.execute("""INSERT INTO plotstation VALUES (?,?,?,?)""", # ? ต้องรวม ID = None
 			(ID,station,qty,week)) #ใส่ ID ไปด้วย
 		conn.commit() # คือ การบันทึกข้อมูลลงในฐานข้อมูล ถ้าไม่รันตัวนี้จะไม่บันทึก
-		print('Insert Sucess...!')
-'''
-insert_week_station('N2',0,'week13')
-insert_week_station('N3',0,'week13')
-insert_week_station('E1',1,'week13')
-insert_week_station('E4',10,'week13')
-insert_week_station('E5',0,'week13')
-insert_week_station('E6',2,'week13')
-insert_week_station('E9',0,'week13')
-insert_week_station('S2',0,'week13')
-insert_week_station('S3',0,'week13')
-insert_week_station('S5',0,'week13')
-insert_week_station('CEN',2,'week13')
-'''
+		#print('Insert Sucess...!')
 
 def show_station_week():
 	with conn:
 		c.execute("SELECT *FROM plotstation")
-		verywek = c.fetchall() # คำสั่งให้ดึงข้อมูลมา
-		print(veryweek)
+		veryweek = c.fetchall() # คำสั่งให้ดึงข้อมูลมา
+		#print(veryweek)
 	return veryweek
 
 def plot_station():
+
+
 	df =pd.read_sql_query("SELECT * FROM plotstation",conn,)
 	del df['ID']
 
-	print(df)
+	#print(df)
 
 	a = df.pivot_table(index='station',columns='week',values='qty')
 
@@ -66,15 +66,7 @@ def plot_station():
 	plt.title('Station Report',color='green')
 	plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,fontsize=7)
 
-	plt.show()
-
-c.execute("""CREATE TABLE IF NOT EXISTS plotstation (
-				ID INTEGER PRIMARY KEY AUTOINCREMENT,
-				station TEXT,
-				qty INTEGER,
-				week TEXT
-			)""")
-
+	plt.show(block=False) # ให้ผุ็ใช้เปิดได้หลายจอ
 
 def insert_work(Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY): # เอาที่เราสร้างมาใส่
 	ID = None
@@ -136,7 +128,7 @@ def pivot_table_1():
 root = Tk()
 
 
-w = 795 # กว้าง
+w = 1300 # กว้าง
 h = 670 # สูง
 
 ws = root.winfo_screenwidth() #screen width เช็คความกว้างของหน้า
@@ -146,9 +138,10 @@ x = (ws/2) - (w/2) # ws คือความกว้างของหน้�
 y = (hs/2) - (h/2) - 45
 root.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
 
-#Froot.resizable(width=False,height=False) #### ปิดขยายหน้าจอ
+root.resizable(width=False,height=False) #### ปิดขยายหน้าจอ
 root.title('Weekly Report V.1.0')
 root.iconbitmap(r'icon_title.ico')
+
 def Exit():
 
 	root.destroy()
@@ -156,23 +149,9 @@ def Exit():
 def About():
 	messagebox.showinfo('About','นี่คือโปรแกรม Weekly Report ของแผนก PSD\n	')
 
-menuber = Menu(root)
-root.config(menu=menuber)
-
-# File menu
-filemenu = Menu(menuber,tearoff=0) # tearoff=0 ปิดฟังก์ชั่นย่อย
-menuber.add_cascade(label='File',menu=filemenu) # add label file menuber
-filemenu.add_command(label='Plot Grahp',command=pivot_table_1)
-filemenu.add_command(label='Exit',command=Exit)
 
 
-helpemenu = Menu(menuber,tearoff=0)
-menuber.add_cascade(label=f'{"Help":^{5}}',menu=helpemenu) # add label file menuber
-helpemenu.add_command(label=f'{"About":^{5}}',command=About) # เทื่อกดปุ่มให้ไปเรียกฟังก์ชั่น About
-
-
-
-def Save(event=None):
+def Save():
 
 	my_workorder  = E1_work.get()
 	my_time = E2_time.get()
@@ -228,7 +207,7 @@ def Save(event=None):
 		#print('โปรดตรวจสอบ:\n Work order ต้องเป็นตัวเลข หรือ\n รูปบแบบวันเวลาต้อง 00:00:00 หรือ\n เลือกจำนวน QTY')
 		messagebox.showerror('ERROR','โปรดตรวจสอบ:\n Work order ต้องเป็นตัวเลข หรือ\n รูปบแบบวันเวลาต้อง 00:00:00 หรือ\n เลือกจำนวน QTY')
 ############### สร้าง TAB ###################
-root.bind('<Return>',Save) # ต้องเพิ่มใน def Save(event=None)
+#root.bind('<Return>',Save) # ต้องเพิ่มใน def Save(event=None)
 
 def update_table():
 
@@ -239,19 +218,81 @@ def update_table():
 
 		resulttable.insert('','end',value=d[1:])
 
+def Save_station():
+
+	N2 = Station_N2.get()	
+	N3 = Station_N3.get()
+	E1 = Station_E1.get()
+	E4 = Station_E4.get()
+	E5 = Station_E5.get()
+	E6 = Station_E6.get()
+	E9 = Station_E9.get()
+	S2 = Station_s2.get()
+	S3 = Station_s3.get()
+	S5 = Station_s5.get()
+	CEN = Station_CEN.get()
+	try:
+
+		QN2 = int(QTY_N2.get())
+		QN3 = int(QTY_N3.get())
+		QE1 = int(QTY_E1.get())
+		QE4 = int(QTY_E4.get())
+		QE5 = int(QTY_E5.get())
+		QE6 = int(QTY_E6.get())
+		QE9 = int(QTY_E9.get())
+		QS2 = int(QTY_S2.get())
+		QS3 = int(QTY_S3.get())
+		QS5 = int(QTY_S5.get())
+		QCEN = int(QTY_CEN.get())
+
+		Week = Weekstation.get()
+
+		#print(N2,N3,E1,E4,E5,E6,E9,S2,S3,S5,CEN,QTY,Week)
+
+		insert_week_station(N2,QN2,Week)
+		insert_week_station(N3,QN3,Week)
+		insert_week_station(E1,QE1,Week)
+		insert_week_station(E4,QE4,Week)
+		insert_week_station(E5,QE5,Week)
+		insert_week_station(E6,QE6,Week)
+		insert_week_station(E9,QE9,Week)
+		insert_week_station(S2,QS2,Week)
+		insert_week_station(S3,QS3,Week)
+		insert_week_station(S5,QS5,Week)
+		insert_week_station(CEN,QCEN,Week)
+
+		QTY_N2.set('QTY_N2')
+		QTY_N3.set('QTY_N3')
+		QTY_E1.set('QTY_E1')
+		QTY_E4.set('QTY_E4')
+		QTY_E5.set('QTY_E5')
+		QTY_E6.set('QTY_E6')
+		QTY_E9.set('QTY_E9')
+		QTY_S2.set('QTY_S2')
+		QTY_S3.set('QTY_S3')
+		QTY_S5.set('QTY_S5')
+		QTY_CEN.set('QTY_CEN')
+		Weekstation.set('Week')
+
+	except:
+		messagebox.showerror('Error','กรุณาเลือก QTY เป็นตัวเลขเท่านั้น')
+
 Tab = ttk.Notebook(root)
 T1 = Frame(Tab)
 T2 = Frame(Tab)
+T3 = Frame(Tab)
 Tab.pack(fill=BOTH,expand=1)
 
 icon_t1 = PhotoImage(file='T1.png') # .subsample(2) ย่อขนาดลง2เท่าใช้ได้กับรูป png เท่านั้น
 icon_t2 = PhotoImage(file='T2.png')
+icon_t3 = PhotoImage(file='T3.png')
 icon_b1 = PhotoImage(file='button_save.png')
 btg = PhotoImage(file='button_graph.png')
 
 
 Tab.add(T1,text=f'{"Writer":^{30}}',image=icon_t1,compound='top')
 Tab.add(T2,text=f'{"Reader":^{30}}',image=icon_t2,compound='top')
+Tab.add(T3,text=f'{"Station":^{30}}',image=icon_t3,compound='top')
 '''
 bg = PhotoImage(file='landscape.png')
 my_label = Label(T1,image=bg)
@@ -260,9 +301,11 @@ my_label.place(x=0,y=0,relwidth=1,relheight=1)
 
 F1 = Frame(T1)
 F2 = Frame(T2)
+F3 = Frame(T3)
 F1.pack()
 #F1.place(x=220,y=50) # control ระยะ
 F2.pack()
+F3.pack()
 ############### สร้าง TAB ###################
 FONT1 = (None,18) # None เปลี่ยนเป็น 'Angsana New'
 
@@ -434,6 +477,220 @@ hsb.pack(fill=X,side=BOTTOM)
 #B2 = ttk.Button(F2,text=f'{"":>{5}}',image=btg,compound='left',command=pivot_table_1) #### ให้ไปเรียก function Edit
 #B2.pack()
 
+############################## F3 ################################
+LT2 = ttk.Label(F3,text=f'{"บันทึกข้อมูล":>{5}}',font=FONT1,foreground='orange')
+LT2.pack(pady=5)
+
+StationN2 = StringVar()
+Station_N2 = ttk.Combobox(F3, width = 50, 
+                            textvariable = StationN2,state='readonly')
+  
+Station_N2['values'] = ('N2')
+Station_N2.pack(pady=1)
+Station_N2.current(0)
+
+StationN3 = StringVar()
+Station_N3 = ttk.Combobox(F3, width = 50, 
+                            textvariable = StationN3,state='readonly')
+  
+Station_N3['values'] = ('N3')
+Station_N3.pack(pady=1)
+Station_N3.current(0)
+
+StationE1 = StringVar()
+Station_E1 = ttk.Combobox(F3, width = 50, 
+                            textvariable = StationE1,state='readonly')
+  
+Station_E1['values'] = ('E1')
+Station_E1.pack(pady=1)
+Station_E1.current(0)
+
+StationE4 = StringVar()
+Station_E4 = ttk.Combobox(F3, width = 50, 
+                            textvariable = StationE4,state='readonly')
+  
+Station_E4['values'] = ('E4')
+Station_E4.pack(pady=1)
+Station_E4.current(0)
+
+StationE5 = StringVar()
+Station_E5 = ttk.Combobox(F3, width = 50, 
+                            textvariable = StationE5,state='readonly')
+  
+Station_E5['values'] = ('E5')
+Station_E5.pack(pady=1)
+Station_E5.current(0)
+
+Station6 = StringVar()
+Station_E6 = ttk.Combobox(F3, width = 50, 
+                            textvariable = Station6,state='readonly')
+  
+Station_E6['values'] = ('E6')
+Station_E6.pack(pady=1)
+Station_E6.current(0)
+
+Station9 = StringVar()
+Station_E9 = ttk.Combobox(F3, width = 50, 
+                            textvariable = Station9,state='readonly')
+  
+Station_E9['values'] = ('E9')
+Station_E9.pack(pady=1)
+Station_E9.current(0)
+
+StationS2 = StringVar()
+Station_s2 = ttk.Combobox(F3, width = 50, 
+                            textvariable = StationS2,state='readonly')
+  
+Station_s2['values'] = ('S2')
+Station_s2.pack(pady=1)
+Station_s2.current(0)
+
+StationS3 = StringVar()
+Station_s3 = ttk.Combobox(F3, width = 50, 
+                            textvariable = StationS3,state='readonly')
+  
+Station_s3['values'] = ('S3')
+Station_s3.pack(pady=1)
+Station_s3.current(0)
+
+StationS5 = StringVar()
+Station_s5 = ttk.Combobox(F3, width = 50, 
+                            textvariable = StationS5,state='readonly')
+  
+Station_s5['values'] = ('S5')
+Station_s5.pack(pady=1)
+Station_s5.current(0)
+
+StationCEN = StringVar()
+Station_CEN = ttk.Combobox(F3, width = 50, 
+                            textvariable = StationCEN,state='readonly')
+  
+Station_CEN['values'] = ('CEN')
+Station_CEN.pack(pady=1)
+Station_CEN.current(0)
+
+
+QTYTN2 = StringVar()
+QTY_N2 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYTN2,state='readonly')
+
+QTY_N2['values'] = ('QTY_N2', 
+                          '0','1','2','3','4','5')
+QTY_N2.pack()
+QTY_N2.current(0)
+
+
+QTYN3 = StringVar()
+QTY_N3 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYN3,state='readonly')
+
+QTY_N3['values'] = ('QTY_N3', 
+                          '0','1','2','3','4','5')
+QTY_N3.pack()
+QTY_N3.current(0)
+
+QTYE1 = StringVar()
+QTY_E1 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYE1,state='readonly')
+
+QTY_E1['values'] = ('QTY_E1', 
+                          '0','1','2','3','4','5')
+QTY_E1.pack()
+QTY_E1.current(0)
+
+QTYE4 = StringVar()
+QTY_E4 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYE4,state='readonly')
+
+QTY_E4['values'] = ('QTY_E4', 
+                          '0','1','2','3','4','5')
+QTY_E4.pack()
+QTY_E4.current(0)
+
+QTYE5 = StringVar()
+QTY_E5 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYE5,state='readonly')
+
+QTY_E5['values'] = ('QTY_E5', 
+                          '0','1','2','3','4','5')
+QTY_E5.pack()
+QTY_E5.current(0)
+
+QTYE6 = StringVar()
+QTY_E6 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYE6,state='readonly')
+
+QTY_E6['values'] = ('QTY_E6', 
+                          '0','1','2','3','4','5')
+QTY_E6.pack()
+QTY_E6.current(0)
+
+QTYE9 = StringVar()
+QTY_E9 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYE9,state='readonly')
+
+QTY_E9['values'] = ('QTY_E9', 
+                          '0','1','2','3','4','5')
+QTY_E9.pack()
+QTY_E9.current(0)
+
+QTYS2 = StringVar()
+QTY_S2 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYS2,state='readonly')
+
+QTY_S2['values'] = ('QTY_S2', 
+                          '0','1','2','3','4','5')
+QTY_S2.pack()
+QTY_S2.current(0)
+
+QTYS3 = StringVar()
+QTY_S3 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYS3,state='readonly')
+
+QTY_S3['values'] = ('QTY_S3', 
+                          '0','1','2','3','4','5')
+QTY_S3.pack()
+QTY_S3.current(0)
+
+QTYS5 = StringVar()
+QTY_S5 = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYS5,state='readonly')
+
+QTY_S5['values'] = ('QTY_S5', 
+                          '0','1','2','3','4','5')
+QTY_S5.pack()
+QTY_S5.current(0)
+
+QTYCEN = StringVar()
+QTY_CEN = ttk.Combobox(F3, width = 50, 
+                            textvariable = QTYCEN,state='readonly')
+
+QTY_CEN['values'] = ('QTY_CEN', 
+                          '0','1','2','3','4','5')
+QTY_CEN.pack()
+QTY_CEN.current(0)
+
+
+
+
+
+Week_t3 = StringVar()
+Weekstation = ttk.Combobox(F3, width = 50, 
+                            textvariable = Week_t3,state='readonly')
+
+Weekstation['values'] = ('Week', 
+                          'Week01','Week02','Week03','Week04','Week05','Week06','Week07','Week08','Week09','Week10',
+                          'Week11','Week12','Week13','Week14','Week15','Week16','Week17','Week18','Week19','Week20',
+                          'Week21','Week22','Week23','Week24','Week25','Week26','Week27','Week28','Week29','Week30','Week31')
+Weekstation.pack(pady=7)
+Weekstation.current(0)
+
+#BT3 = ttk.Button(F3,text=f'{"Save":>{10}}',image=icon_b1,compound='left',command=Save_station) #### ให้ไปเรียก function Save
+#BT3.pack(pady=3)
+
+
+
+
 def Delete(event=None):
 	check = messagebox.askyesno('Confirm','คุณต้องการลบข้อมูลหรือไม่ ?')
 	try:
@@ -459,6 +716,27 @@ rightclick.add_command(label='Delete',command=Delete) # ไปเรียก fu
 resulttable.bind('<Delete>',Delete) # กดปุ่ม Delete เพื่อลบข้อมูล
 
 
+menuber = Menu(root)
+root.config(menu=menuber)
+
+# File menu
+filemenu = Menu(menuber,tearoff=0) # tearoff=0 ปิดฟังก์ชั่นย่อย
+menuber.add_cascade(label='File',menu=filemenu) # add label file menuber
+filemenu.add_command(label='Submit Work order',command=Save)
+filemenu.add_command(label='Submit Station',command=Save_station)
+filemenu.add_command(label='Exit',command=Exit)
+
+Run = Menu(menuber,tearoff=0)
+menuber.add_cascade(label=f'{"Run":^{5}}',menu=Run) # add label file menuber
+Run.add_command(label=f'{"Plot Grahp Failure":^{5}}',command=pivot_table_1) # เทื่อกดปุ่มให้ไปเรียกฟังก์ชั่น pivot_table_1
+Run.add_command(label=f'{"Plot Grahp Station":^{5}}',command=plot_station)
+
+helpemenu = Menu(menuber,tearoff=0)
+menuber.add_cascade(label=f'{"Help":^{5}}',menu=helpemenu) # add label file menuber
+helpemenu.add_command(label=f'{"About":^{5}}',command=About) # เทื่อกดปุ่มให้ไปเรียกฟังก์ชั่น About
+
+
+
 def menupopup(event=None): # ใส่ Event ด้วยจ๊ะ
 
 	if left_click == True: ######### เดี๋ยวมาทำทีหลัง ทำเอง คลิก ซ้ายเลือกก่อนที่จะแสดง POP UP
@@ -478,6 +756,9 @@ def leftclick(event=None):
 	#print(left_click)
 
 resulttable.bind('<Button-1>',leftclick)
+
+
+
 
 
 update_table()
