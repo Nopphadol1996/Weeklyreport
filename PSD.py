@@ -56,17 +56,18 @@ def plot_station():
 	del df['ID']
 
 	#print(df)
+	try:
+		
+		a = df.pivot_table(index='station',columns='week',values='qty')
+		a.plot(kind='bar',stacked=True,figsize=(12,6))
 
-	a = df.pivot_table(index='station',columns='week',values='qty')
-
-	a.plot(kind='bar',stacked=True,figsize=(12,6))
-
-	plt.ylim(0,41)
-	plt.grid(axis = 'y')
-	plt.title('Station Report',color='green')
-	plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,fontsize=7)
-
-	plt.show(block=False) # ให้ผุ็ใช้เปิดได้หลายจอ
+		plt.ylim(0,41)
+		plt.grid(axis = 'y')
+		plt.title('Station Report',color='green')
+		plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,fontsize=7)
+		plt.show(block=False) # ให้ผุ็ใช้เปิดได้หลายจอ
+	except:
+		messagebox.showerror('Error','ไม่มีข้อมูลที่จะแสดง')
 
 def insert_work(Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY): # เอาที่เราสร้างมาใส่
 	ID = None
@@ -108,11 +109,11 @@ def pivot_table_1():
 
 		plt.ylim(0,10)
 		plt.grid(axis = 'y')
-		plt.show()
+		plt.show(block=False)
 
 	except Exception as e:
 		messagebox.showerror('ERROR','ไม่มีข้อมูลในตาราง')
-		Py_Initialize()
+		#Py_Initialize()
 
 	'''
 	filepath = 'C:/Users/Nopphadol/Desktop/Project_beginer/Myfile.xlsx'
@@ -138,7 +139,7 @@ x = (ws/2) - (w/2) # ws คือความกว้างของหน้�
 y = (hs/2) - (h/2) - 45
 root.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
 
-root.resizable(width=False,height=False) #### ปิดขยายหน้าจอ
+#root.resizable(width=False,height=False) #### ปิดขยายหน้าจอ
 root.title('Weekly Report V.1.0')
 root.iconbitmap(r'icon_title.ico')
 
@@ -218,6 +219,16 @@ def update_table():
 
 		resulttable.insert('','end',value=d[1:])
 
+def update_table_T4():
+
+	resulttableT4.delete(*resulttableT4.get_children())
+	data_dbt4 = show_station_week()
+	for d in data_dbt4:
+
+		resulttableT4.insert('','end',value=d[1:])
+
+
+
 def Save_station():
 
 	N2 = Station_N2.get()	
@@ -281,6 +292,7 @@ Tab = ttk.Notebook(root)
 T1 = Frame(Tab)
 T2 = Frame(Tab)
 T3 = Frame(Tab)
+T4 = Frame(Tab)
 Tab.pack(fill=BOTH,expand=1)
 
 icon_t1 = PhotoImage(file='T1.png') # .subsample(2) ย่อขนาดลง2เท่าใช้ได้กับรูป png เท่านั้น
@@ -291,8 +303,9 @@ btg = PhotoImage(file='button_graph.png')
 
 
 Tab.add(T1,text=f'{"Writer":^{30}}',image=icon_t1,compound='top')
-Tab.add(T2,text=f'{"Reader":^{30}}',image=icon_t2,compound='top')
+Tab.add(T2,text=f'{"Table Fault":^{30}}',image=icon_t2,compound='top')
 Tab.add(T3,text=f'{"Station":^{30}}',image=icon_t3,compound='top')
+Tab.add(T4,text=f'{"Table Station":^{30}}',image=icon_t3,compound='top')
 '''
 bg = PhotoImage(file='landscape.png')
 my_label = Label(T1,image=bg)
@@ -302,10 +315,12 @@ my_label.place(x=0,y=0,relwidth=1,relheight=1)
 F1 = Frame(T1)
 F2 = Frame(T2)
 F3 = Frame(T3)
+F4 = Frame(T4)
 F1.pack()
 #F1.place(x=220,y=50) # control ระยะ
 F2.pack()
 F3.pack()
+F4.pack()
 ############### สร้าง TAB ###################
 FONT1 = (None,18) # None เปลี่ยนเป็น 'Angsana New'
 
@@ -431,12 +446,6 @@ qtychoosen['values'] = ('QTY',
 qtychoosen.pack(pady=2)
 qtychoosen.current(0)
 
-############## QTY ###############
-
-#B1 = ttk.Button(F1,text=f'{"Save":>{10}}',image=icon_b1,compound='left',command=Save) #### ให้ไปเรียก function Save
-#B1.place(x=310,y=580)
-#B1.pack(pady=5)
-
 ############## T2 ###############
 
 LT2 = ttk.Label(F2,text=f'{"ตารางรางแสดงข้อมูล":>{5}}',font=FONT1,foreground='green')
@@ -474,19 +483,22 @@ resulttable.configure(xscrollcommand=hsb.set)
 hsb.pack(fill=X,side=BOTTOM)
 
 
-#B2 = ttk.Button(F2,text=f'{"":>{5}}',image=btg,compound='left',command=pivot_table_1) #### ให้ไปเรียก function Edit
-#B2.pack()
-
 ############################## F3 ################################
-LT2 = ttk.Label(F3,text=f'{"บันทึกข้อมูล":>{5}}',font=FONT1,foreground='orange')
-LT2.pack(pady=5)
+LT2 = ttk.Label(F3,text=f'{"Station":^{10}}',font=FONT1,foreground='red')
+LT2.grid(row=0,column=0,pady=30)
+
+LT3 = ttk.Label(F3,text=f'{"QTY":^{10}}',font=FONT1,foreground='red')
+LT3.grid(row=0,column=1,pady=30)
+
+LT4 = ttk.Label(F3,text=f'{"Week":^{10}}',font=FONT1,foreground='red')
+LT4.grid(row=0,column=2,pady=30)
 
 StationN2 = StringVar()
 Station_N2 = ttk.Combobox(F3, width = 50, 
                             textvariable = StationN2,state='readonly')
   
 Station_N2['values'] = ('N2')
-Station_N2.pack(pady=1)
+Station_N2.grid(row=1,column=0,padx=10,pady=20)
 Station_N2.current(0)
 
 StationN3 = StringVar()
@@ -494,7 +506,7 @@ Station_N3 = ttk.Combobox(F3, width = 50,
                             textvariable = StationN3,state='readonly')
   
 Station_N3['values'] = ('N3')
-Station_N3.pack(pady=1)
+Station_N3.grid(row=2,column=0,padx=1,pady=10)
 Station_N3.current(0)
 
 StationE1 = StringVar()
@@ -502,7 +514,7 @@ Station_E1 = ttk.Combobox(F3, width = 50,
                             textvariable = StationE1,state='readonly')
   
 Station_E1['values'] = ('E1')
-Station_E1.pack(pady=1)
+Station_E1.grid(row=3,column=0,padx=1,pady=10)
 Station_E1.current(0)
 
 StationE4 = StringVar()
@@ -510,7 +522,7 @@ Station_E4 = ttk.Combobox(F3, width = 50,
                             textvariable = StationE4,state='readonly')
   
 Station_E4['values'] = ('E4')
-Station_E4.pack(pady=1)
+Station_E4.grid(row=4,column=0,padx=1,pady=10)
 Station_E4.current(0)
 
 StationE5 = StringVar()
@@ -518,7 +530,7 @@ Station_E5 = ttk.Combobox(F3, width = 50,
                             textvariable = StationE5,state='readonly')
   
 Station_E5['values'] = ('E5')
-Station_E5.pack(pady=1)
+Station_E5.grid(row=5,column=0,padx=1,pady=10)
 Station_E5.current(0)
 
 Station6 = StringVar()
@@ -526,7 +538,7 @@ Station_E6 = ttk.Combobox(F3, width = 50,
                             textvariable = Station6,state='readonly')
   
 Station_E6['values'] = ('E6')
-Station_E6.pack(pady=1)
+Station_E6.grid(row=6,column=0,padx=1,pady=10)
 Station_E6.current(0)
 
 Station9 = StringVar()
@@ -534,7 +546,7 @@ Station_E9 = ttk.Combobox(F3, width = 50,
                             textvariable = Station9,state='readonly')
   
 Station_E9['values'] = ('E9')
-Station_E9.pack(pady=1)
+Station_E9.grid(row=7,column=0,padx=1,pady=10)
 Station_E9.current(0)
 
 StationS2 = StringVar()
@@ -542,7 +554,7 @@ Station_s2 = ttk.Combobox(F3, width = 50,
                             textvariable = StationS2,state='readonly')
   
 Station_s2['values'] = ('S2')
-Station_s2.pack(pady=1)
+Station_s2.grid(row=8,column=0,padx=1,pady=10)
 Station_s2.current(0)
 
 StationS3 = StringVar()
@@ -550,7 +562,7 @@ Station_s3 = ttk.Combobox(F3, width = 50,
                             textvariable = StationS3,state='readonly')
   
 Station_s3['values'] = ('S3')
-Station_s3.pack(pady=1)
+Station_s3.grid(row=9,column=0,padx=1,pady=10)
 Station_s3.current(0)
 
 StationS5 = StringVar()
@@ -558,7 +570,7 @@ Station_s5 = ttk.Combobox(F3, width = 50,
                             textvariable = StationS5,state='readonly')
   
 Station_s5['values'] = ('S5')
-Station_s5.pack(pady=1)
+Station_s5.grid(row=10,column=0,padx=1,pady=10)
 Station_s5.current(0)
 
 StationCEN = StringVar()
@@ -566,7 +578,7 @@ Station_CEN = ttk.Combobox(F3, width = 50,
                             textvariable = StationCEN,state='readonly')
   
 Station_CEN['values'] = ('CEN')
-Station_CEN.pack(pady=1)
+Station_CEN.grid(row=11,column=0,padx=1,pady=10)
 Station_CEN.current(0)
 
 
@@ -576,7 +588,7 @@ QTY_N2 = ttk.Combobox(F3, width = 50,
 
 QTY_N2['values'] = ('QTY_N2', 
                           '0','1','2','3','4','5')
-QTY_N2.pack()
+QTY_N2.grid(row=1,column=1,padx=10,pady=20)
 QTY_N2.current(0)
 
 
@@ -586,7 +598,7 @@ QTY_N3 = ttk.Combobox(F3, width = 50,
 
 QTY_N3['values'] = ('QTY_N3', 
                           '0','1','2','3','4','5')
-QTY_N3.pack()
+QTY_N3.grid(row=2,column=1,padx=1,pady=10)
 QTY_N3.current(0)
 
 QTYE1 = StringVar()
@@ -595,7 +607,7 @@ QTY_E1 = ttk.Combobox(F3, width = 50,
 
 QTY_E1['values'] = ('QTY_E1', 
                           '0','1','2','3','4','5')
-QTY_E1.pack()
+QTY_E1.grid(row=3,column=1,padx=1,pady=10)
 QTY_E1.current(0)
 
 QTYE4 = StringVar()
@@ -604,7 +616,7 @@ QTY_E4 = ttk.Combobox(F3, width = 50,
 
 QTY_E4['values'] = ('QTY_E4', 
                           '0','1','2','3','4','5')
-QTY_E4.pack()
+QTY_E4.grid(row=4,column=1,padx=1,pady=10)
 QTY_E4.current(0)
 
 QTYE5 = StringVar()
@@ -613,7 +625,7 @@ QTY_E5 = ttk.Combobox(F3, width = 50,
 
 QTY_E5['values'] = ('QTY_E5', 
                           '0','1','2','3','4','5')
-QTY_E5.pack()
+QTY_E5.grid(row=5,column=1,padx=1,pady=10)
 QTY_E5.current(0)
 
 QTYE6 = StringVar()
@@ -622,7 +634,7 @@ QTY_E6 = ttk.Combobox(F3, width = 50,
 
 QTY_E6['values'] = ('QTY_E6', 
                           '0','1','2','3','4','5')
-QTY_E6.pack()
+QTY_E6.grid(row=6,column=1,padx=1,pady=10)
 QTY_E6.current(0)
 
 QTYE9 = StringVar()
@@ -631,7 +643,7 @@ QTY_E9 = ttk.Combobox(F3, width = 50,
 
 QTY_E9['values'] = ('QTY_E9', 
                           '0','1','2','3','4','5')
-QTY_E9.pack()
+QTY_E9.grid(row=7,column=1,padx=1,pady=10)
 QTY_E9.current(0)
 
 QTYS2 = StringVar()
@@ -640,7 +652,7 @@ QTY_S2 = ttk.Combobox(F3, width = 50,
 
 QTY_S2['values'] = ('QTY_S2', 
                           '0','1','2','3','4','5')
-QTY_S2.pack()
+QTY_S2.grid(row=8,column=1,padx=1,pady=10)
 QTY_S2.current(0)
 
 QTYS3 = StringVar()
@@ -649,7 +661,7 @@ QTY_S3 = ttk.Combobox(F3, width = 50,
 
 QTY_S3['values'] = ('QTY_S3', 
                           '0','1','2','3','4','5')
-QTY_S3.pack()
+QTY_S3.grid(row=9,column=1,padx=1,pady=10)
 QTY_S3.current(0)
 
 QTYS5 = StringVar()
@@ -658,7 +670,7 @@ QTY_S5 = ttk.Combobox(F3, width = 50,
 
 QTY_S5['values'] = ('QTY_S5', 
                           '0','1','2','3','4','5')
-QTY_S5.pack()
+QTY_S5.grid(row=10,column=1,padx=1,pady=10)
 QTY_S5.current(0)
 
 QTYCEN = StringVar()
@@ -667,12 +679,8 @@ QTY_CEN = ttk.Combobox(F3, width = 50,
 
 QTY_CEN['values'] = ('QTY_CEN', 
                           '0','1','2','3','4','5')
-QTY_CEN.pack()
+QTY_CEN.grid(row=11,column=1,padx=1,pady=10)
 QTY_CEN.current(0)
-
-
-
-
 
 Week_t3 = StringVar()
 Weekstation = ttk.Combobox(F3, width = 50, 
@@ -682,13 +690,38 @@ Weekstation['values'] = ('Week',
                           'Week01','Week02','Week03','Week04','Week05','Week06','Week07','Week08','Week09','Week10',
                           'Week11','Week12','Week13','Week14','Week15','Week16','Week17','Week18','Week19','Week20',
                           'Week21','Week22','Week23','Week24','Week25','Week26','Week27','Week28','Week29','Week30','Week31')
-Weekstation.pack(pady=7)
+Weekstation.grid(row=1,column=2,padx=1,pady=10)
 Weekstation.current(0)
 
-#BT3 = ttk.Button(F3,text=f'{"Save":>{10}}',image=icon_b1,compound='left',command=Save_station) #### ให้ไปเรียก function Save
-#BT3.pack(pady=3)
+########################## F4 #######################
+LT4 = ttk.Label(F4,text=f'{"ตารางรางแสดงข้อมูล":>{5}}',font=FONT1,foreground='green')
+LT4.pack(pady=20)
+
+Main_icon2 = PhotoImage(file='MainiconT2.png')
+Mainicon2 = Label(F4,image=Main_icon2)
+Mainicon2.pack()
+
+s = ttk.Style(F4)
+s.theme_use("clam")
+
+s.configure(".",font=('Angsana New',14))
+s.configure("Treeview.Heading",foreground='red',font=('Helvetica',8,"bold"))
 
 
+header4 = ['Station','QTY','Week'] # สร้างHeader4
+header4width = [150,150,150]
+
+resulttableT4 = ttk.Treeview(F4,columns=header4,show='headings',height=13) # สร้างTreeview height = 10 คือ จำนวนบรรทัดใน Treeview
+resulttableT4.pack(pady=10)
+ 
+for h in header4:
+	resulttableT4.heading(h,text=h) # นำ ข้อมูลใน list header4 ไปใส่ใน Treeview
+
+for h,w in zip(header4,header4width):
+	resulttableT4.column(h,width=w) # กำหนดระยะ header4width เข้ากับ header4 โดยการ zip
+
+#resulttableT4.insert('','end',value=['31/08/2021','CEN','EB','D10','10:30:21','AMC_S: Obstacle Detection','The door can not open','Reset DCU',
+				#			'600100200','1'])  # ถ้าเป็น end อังคาร์จะขึ้นก่อนในตาราง
 
 
 def Delete(event=None):
@@ -745,7 +778,6 @@ def menupopup(event=None): # ใส่ Event ด้วยจ๊ะ
 		rightclick.post(event.x_root,event.y_root) # บอกตำแหน่งของแนวแกน x y  ที่คลิกใน resulttable
 
 resulttable.bind('<Button-3>',menupopup) # มีการคลิกขวาที่ตาราง resulttable ให้แสดงข้อมูลในfunction menupopup , Button-3 คือคลิก ขวา
-
 ##################### Right Click Menu ###########################
 
 left_click = False
@@ -762,4 +794,5 @@ resulttable.bind('<Button-1>',leftclick)
 
 
 update_table()
+update_table_T4()
 root.mainloop()
