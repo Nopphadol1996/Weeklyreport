@@ -4,7 +4,7 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import sqlite3
-
+from datetime import datetime
 
 ######### DB #####################
 conn = sqlite3.connect('Weekly.db')
@@ -13,6 +13,7 @@ c = conn.cursor()
 
 c.execute("""CREATE TABLE IF NOT EXISTS weeklytable (
 				ID INTEGER PRIMARY KEY AUTOINCREMENT,
+				transactionid TEXT,
 				Date_ TEXT,
 				Station TEXT,
 				Bound TEXT,
@@ -27,11 +28,11 @@ c.execute("""CREATE TABLE IF NOT EXISTS weeklytable (
 
 c.execute("""CREATE TABLE IF NOT EXISTS plotstation (
 				ID INTEGER PRIMARY KEY AUTOINCREMENT,
+				transectionid TEXT,
 				station TEXT,
 				qty INTEGER,
 				week TEXT
 			)""")
-
 
 
 def insert_week_station(station,qty,week): # เอาที่เราสร้างมาใส่
@@ -69,11 +70,11 @@ def plot_station():
 	except:
 		messagebox.showerror('Error','ไม่มีข้อมูลที่จะแสดง')
 
-def insert_work(Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY): # เอาที่เราสร้างมาใส่
+def insert_work(transactionid,Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY): # เอาที่เราสร้างมาใส่
 	ID = None
 	with conn:
-		c.execute("""INSERT INTO weeklytable VALUES (?,?,?,?,?,?,?,?,?,?,?)""", # ? ต้องรวม ID = None
-			(ID,Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY)) #ใส่ ID ไปด้วย
+		c.execute("""INSERT INTO weeklytable VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""", # ? ต้องรวม ID = None
+			(ID,transactionid,Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY)) #ใส่ ID ไปด้วย
 		conn.commit() # คือ การบันทึกข้อมูลลงในฐานข้อมูล ถ้าไม่รันตัวนี้จะไม่บันทึก
 		#print('Insert Sucess...!')
 
@@ -86,9 +87,18 @@ def show_expense():
 		# print(expense)
 	return expense
 
-def delete_expense(Work):
+def update_expense(transactionid,Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY):
 	with conn:
-		c.execute("DELETE FROM weeklytable WHERE Work=?",([Work])) #ใส่เป็น list
+		########################## ต้องเหมิอนกับในdatabase ###############
+		c.execute("""UPDATE weeklytable SET Date_=?, Station=?, Bound=?, Door=? ,Time_=?,Failre=?,Cause=?,Resolution=?,Work=?,QTY=? WHERE transactionid=?""",
+			([Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY,transactionid]))### Were ID transactionidต้องมาอยู้หลัง
+		conn.commit()
+		print('Data update')
+#update_expense('202109081423752234','31/01/2021','E1','EB','D07','10:20:31','AMC_S: Obstacle Detection','Door closed too slow','Reset DCU',600600123,5)
+
+def delete_expense(transactionid):
+	with conn:
+		c.execute("DELETE FROM weeklytable WHERE transactionid=?",([transactionid])) #ใส่เป็น list
 	conn.commit()
 
 	# print('------Data Deleted----')
@@ -122,7 +132,6 @@ def pivot_table_1():
 	writer.save()
 	print('------------')
 	'''
-
 
 ######### DB #####################
 
@@ -168,9 +177,13 @@ def Save():
 	my_Maintenance = Maintenancechoosen.get()
 
 	textdate  = my_days+'/'+my_months+'/'+my_years
+	stamp = datetime.now()
+	dt = stamp.strftime('%Y-%m-%d %H:%M:%S')
+	transactionid = stamp.strftime('%Y%m%d%H%M%f') # สร้าง transection ID
+	#print(type(transactionid))
 
-#	text = '{} {} {} {} {} {} {} {} {} {} '.format(textdate,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_Maintenance,my_workorder,my_qty)
-#	print(text)
+	#text = '{} {} {} {} {} {} {} {} {} {} '.format(transactionid,textdate,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_Maintenance,my_workorder,my_qty)
+	#print(text)
 
 	
 	dayschoosen.set('day')
@@ -187,7 +200,8 @@ def Save():
 	qtychoosen.set('QTY')
 	try:
 
-		insert_work(textdate,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_Maintenance,int(my_workorder),int(my_qty))
+
+		insert_work(transactionid,textdate,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_Maintenance,int(my_workorder),int(my_qty))
 		'''
 		########################## ถ้าต้องการsave csv ให้เปิดอันนี้ ##################
 		with open('test.csv','a',encoding='utf-8',newline='') as f:
@@ -204,7 +218,8 @@ def Save():
 		messagebox.showinfo('Successfuly','บันทึกข้อมูลสำเร็จ')
 		E1.focus()
 
-	except:
+	except Exception as e:
+		print('----',e)
 		#print('โปรดตรวจสอบ:\n Work order ต้องเป็นตัวเลข หรือ\n รูปบแบบวันเวลาต้อง 00:00:00 หรือ\n เลือกจำนวน QTY')
 		messagebox.showerror('ERROR','โปรดตรวจสอบ:\n Work order ต้องเป็นตัวเลข หรือ\n รูปบแบบวันเวลาต้อง 00:00:00 หรือ\n เลือกจำนวน QTY')
 ############### สร้าง TAB ###################
@@ -216,7 +231,7 @@ def update_table():
 	data_db = show_expense()
 	#insert_work(textdate,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_Maintenance,int(my_workorder),int(my_qty))
 	for d in data_db:
-
+		alltransection[d[1]] = d[1:]
 		resulttable.insert('','end',value=d[1:])
 
 def update_table_T4():
@@ -462,8 +477,8 @@ s.configure(".",font=('Angsana New',14))
 s.configure("Treeview.Heading",foreground='red',font=('Helvetica',8,"bold"))
 
 
-header = ['Date','Station','Bound','Door','Time','Failure log','Cause','Resolution','Work order','QTY'] # สร้างHeader
-headerwidth = [70,50,50,45,50,550,200,110,80,30]
+header = ['transactionid','Date','Station','Bound','Door','Time','Failure log','Cause','Resolution','Work order','QTY'] # สร้างHeader
+headerwidth = [120,70,50,50,45,50,550,200,110,80,30]
 
 resulttable = ttk.Treeview(F2,columns=header,show='headings',height=13) # สร้างTreeview height = 10 คือ จำนวนบรรทัดใน Treeview
 resulttable.pack(pady=10)
@@ -481,6 +496,30 @@ hsb = ttk.Scrollbar(F2,orient="horizontal")
 hsb.configure(command=resulttable.xview)
 resulttable.configure(xscrollcommand=hsb.set)
 hsb.pack(fill=X,side=BOTTOM)
+
+alltransection = {}
+
+def UpdateSQL():
+	data = list(alltransection.values())
+	print(data)
+	#print('UPDATE SQL:',data[0]) # โชว์แค่ 1 record
+	#print('dataupdata',data)
+	for d in data:
+		print(d[0])
+		print(d[1])
+		print(d[2])
+		print(d[3])
+		print(d[4])
+		print(d[5])
+		print(d[6])
+		print(d[7])
+		print(d[8])
+		print(d[9])
+		print(d[10])
+		# transectionid,title,expense,quantity,total
+		# d[0] = 202108300144088343,d[1]= จันทร์-2021-08-30 01:44:52,d[2]มะม่วง,d[3]=30,d[4]=2,d[5]60.0
+		####### เราต้องการเปลี่ยนแค่ d0,2,3,4,5
+		update_expense(d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10]) #ไปเรียก function update_expense มีจำนวน 6 ฟิว ใน database 
 
 
 ############################## F3 ################################
@@ -734,18 +773,155 @@ def Delete(event=None):
 			data = resulttable.item(select) # ดึง Item ที่เราเลือกมา จากตาราง (((ถ้าอยากได้มากว่า 1 รายการให้ Run for lop)))
 			data = data['values'] # ไปดึง values ออกมา ((dic))
 			#print(data)
-			Work = data[8] # ให้ transectionid = รหัสรายการคือ data[0]
-			#print(type(Work))
-			delete_expense(str(Work)) ### Delete in DB
+			transectionid = data[0] # ให้ transectionid = รหัสรายการคือ data[0]
+			#print(transectionid)
+			delete_expense(transectionid) ### Delete in DB
 			update_table() # Update data ใหม่่ทั้งหมดอัพโนมัติ
 		else:
 			pass
 	except:
 
 		messagebox.showerror('ERROR','กรุณาเลือกรายการที่จะลบ')
+def Edit_record():
+	POPUP = Toplevel()
+	w = 500 # กว้าง
+	h = 480 # สูง
+
+	ws = POPUP.winfo_screenwidth() #screen width เช็คความกว้างของหน้า
+	hs = POPUP.winfo_screenheight() #screen height
+
+
+	x = (ws/2) - (w/2) # ws คือความกว้างของหน้าจอทั้งหมด /2 คือครึ่งหนึ่งคือ CENTER
+	y = (hs/2) - (h/2) - 45
+
+	POPUP.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
+
+	 ############## T1 ###############
+	L1 = ttk.Label(POPUP,text=f'{"Work order":^{15}}',font=FONT1,foreground='green')
+	L1.pack(ipadx=10)
+
+
+	E1_work = StringVar()
+	E1 = ttk.Entry(POPUP,textvariable=E1_work,font=FONT1)
+	E1.pack(ipadx=27)
+
+	L2 = ttk.Label(POPUP,text=f'{"Time":^{20}}',font=FONT1,foreground='green')
+	L2.pack(ipadx=10)
+
+	E2_time = StringVar()
+	E2 = ttk.Entry(POPUP,textvariable=E2_time,font=FONT1)
+	E2.pack(ipadx=27)
+
+	L3 = ttk.Label(POPUP,text=f'{"Date":^{20}}',font=FONT1,foreground='green')
+	L3.pack(ipadx=10)
+
+	E3_date = StringVar()
+	E3 = ttk.Entry(POPUP,textvariable=E3_date,font=FONT1)
+	E3.pack(ipadx=27)
+
+	L4 = ttk.Label(POPUP,text=f'{"Station":^{20}}',font=FONT1,foreground='green')
+	L4.pack(ipadx=10)
+
+	E4_station = StringVar()
+	E4 = ttk.Entry(POPUP,textvariable=E4_station,font=FONT1)
+	E4.pack(ipadx=27)
+
+	L5 = ttk.Label(POPUP,text=f'{"Bound":^{20}}',font=FONT1,foreground='green')
+	L5.pack(ipadx=10)
+
+	E5_bound = StringVar()
+	E5 = ttk.Entry(POPUP,textvariable=E5_bound,font=FONT1)
+	E5.pack(ipadx=27)
+
+	L6 = ttk.Label(POPUP,text=f'{"Door":^{20}}',font=FONT1,foreground='green')
+	L6.pack(ipadx=10)
+
+	E6_door = StringVar()
+	E6 = ttk.Entry(POPUP,textvariable=E6_door,font=FONT1)
+	E6.pack(ipadx=27)
+
+	L7 = ttk.Label(POPUP,text=f'{"Failure log":^{20}}',font=FONT1,foreground='green')
+	L7.pack(ipadx=10)
+
+	E7_failure = StringVar()
+	E7 = ttk.Entry(POPUP,textvariable=E7_failure,font=FONT1)
+	E7.pack(ipadx=27)
+
+	L8 = ttk.Label(POPUP,text=f'{"Cause":^{20}}',font=FONT1,foreground='green')
+	L8.pack(ipadx=10)
+
+	E8_cause = StringVar()
+	E8 = ttk.Entry(POPUP,textvariable=E8_cause,font=FONT1)
+	E8.pack(ipadx=27)
+
+	L9 = ttk.Label(POPUP,text=f'{"Resolution":^{20}}',font=FONT1,foreground='green')
+	L9.pack(ipadx=10)
+
+	E9_resolution = StringVar()
+	E9 = ttk.Entry(POPUP,textvariable=E9_resolution,font=FONT1)
+	E9.pack(ipadx=27)
+
+	L10 = ttk.Label(POPUP,text=f'{"QTY":^{20}}',font=FONT1,foreground='green')
+	L10.pack(ipadx=10)
+
+	E10_qty = StringVar()
+	E10 = ttk.Entry(POPUP,textvariable=E10_qty,font=FONT1)
+	E10.pack(ipadx=27)
+
+	#show_expense()
+	def Edit():
+
+		olddata = alltransection[str(transectionid)]
+		#print(olddata)
+
+		
+		my_workorder  = E1_work.get()
+		my_time = E2_time.get()
+		my_days = E3_date.get()
+		my_station = E4_station.get()
+		my_bound = E5_bound.get()
+		my_door = E6_door.get()
+		my_failure =  E7_failure.get()
+		my_cause = E8_cause.get()
+		my_resolution = E9_resolution.get()
+		my_qty = E10_qty.get()
+	
+		newdata = (olddata[0],my_days,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_resolution,int(my_workorder),int(my_qty)) # ตำแหน่งที่ 0,1 เราไม่ต้องแก้ไข
+		print(newdata)
+		alltransection[str(transectionid)] = newdata
+		#print(alltransection)
+		UpdateSQL()
+		update_table()
+		POPUP.destroy() ########### สั่งปิด POPUP ###################
+		
+	B2 = ttk.Button(POPUP,text=f'{"Save":>{10}}',image=icon_b1,compound='left',command=Edit) #### ให้ไปเรียก function Edit
+	B2.pack(ipadx=50,ipady=20,pady=20)
+
+		
+	#global transectionid
+	select = resulttable.selection() # ไปเรียกฟังก์ชั่น พิเศษที่ คลิกใน Treeview
+	#print(select)
+	data = resulttable.item(select) # ดึง Item ที่เราเลือกมา จากตาราง (((ถ้าอยากได้มากว่า 1 รายการให้ Run for lop)))
+	data = data['values'] # ไปดึง values ออกมา ((dic))
+	transectionid = data[0]
+	#print(transectionid)
+	############## ดึงข้อมูลเก่ามาใส่ใน ช่องกรอกที่เราจะแก้ไข ######################
+	E1_work.set(data[9])
+	E2_time.set(data[5])
+	E3_date.set(data[1])
+	E4_station.set(data[2])
+	E5_bound.set(data[3])
+	E6_door.set(data[4])
+	E7_failure.set(data[6])
+	E8_cause.set(data[7])
+	E9_resolution.set(data[8])
+	E10_qty.set(data[10])
+
+	POPUP.mainloop()
 
 rightclick = Menu(root,tearoff=0)
 rightclick.add_command(label='Delete',command=Delete) # ไปเรียก function Delete
+rightclick.add_command(label='Edit',command=Edit_record)
 resulttable.bind('<Delete>',Delete) # กดปุ่ม Delete เพื่อลบข้อมูล
 
 
@@ -788,10 +964,6 @@ def leftclick(event=None):
 	#print(left_click)
 
 resulttable.bind('<Button-1>',leftclick)
-
-
-
-
 
 update_table()
 update_table_T4()
