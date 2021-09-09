@@ -35,11 +35,11 @@ c.execute("""CREATE TABLE IF NOT EXISTS plotstation (
 			)""")
 
 
-def insert_week_station(station,qty,week): # เอาที่เราสร้างมาใส่
+def insert_week_station(transactionid,station,qty,week): # เอาที่เราสร้างมาใส่
 	ID = None
 	with conn:
-		c.execute("""INSERT INTO plotstation VALUES (?,?,?,?)""", # ? ต้องรวม ID = None
-			(ID,station,qty,week)) #ใส่ ID ไปด้วย
+		c.execute("""INSERT INTO plotstation VALUES (?,?,?,?,?)""", # ? ต้องรวม ID = None
+			(ID,transactionid,station,qty,week)) #ใส่ ID ไปด้วย
 		conn.commit() # คือ การบันทึกข้อมูลลงในฐานข้อมูล ถ้าไม่รันตัวนี้จะไม่บันทึก
 		#print('Insert Sucess...!')
 
@@ -67,8 +67,11 @@ def plot_station():
 		plt.title('Station Report',color='green')
 		plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,fontsize=7)
 		plt.show(block=False) # ให้ผุ็ใช้เปิดได้หลายจอ
+
 	except:
 		messagebox.showerror('Error','ไม่มีข้อมูลที่จะแสดง')
+
+
 
 def insert_work(transactionid,Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY): # เอาที่เราสร้างมาใส่
 	ID = None
@@ -93,10 +96,10 @@ def update_expense(transactionid,Date_,Station,Bound,Door,Time_,Failre,Cause,Res
 		c.execute("""UPDATE weeklytable SET Date_=?, Station=?, Bound=?, Door=? ,Time_=?,Failre=?,Cause=?,Resolution=?,Work=?,QTY=? WHERE transactionid=?""",
 			([Date_,Station,Bound,Door,Time_,Failre,Cause,Resolution,Work,QTY,transactionid]))### Were ID transactionidต้องมาอยู้หลัง
 		conn.commit()
-		print('Data update')
+		#print('Data update')
 #update_expense('202109081423752234','31/01/2021','E1','EB','D07','10:20:31','AMC_S: Obstacle Detection','Door closed too slow','Reset DCU',600600123,5)
 
-def delete_expense(transactionid):
+def delete_fuilt(transactionid):
 	with conn:
 		c.execute("DELETE FROM weeklytable WHERE transactionid=?",([transactionid])) #ใส่เป็น list
 	conn.commit()
@@ -125,16 +128,42 @@ def pivot_table_1():
 		messagebox.showerror('ERROR','ไม่มีข้อมูลในตาราง')
 		#Py_Initialize()
 
-	'''
-	filepath = 'C:/Users/Nopphadol/Desktop/Project_beginer/Myfile.xlsx'
-	writer = pd.ExcelWriter(filepath)
-	df.to_excel(writer,'Mysheet2',index=False)
-	writer.save()
-	print('------------')
-	'''
-
 ######### DB #####################
+'''
+def Export_station():
 
+	df =pd.read_sql_query("SELECT * FROM plotstation",conn,)
+	del df['ID']
+
+	try:
+
+		filepath= 'C:/Nopphadol/Desktop/HHPSd/pythontoexe/My_chart_failure.xlsx'
+		writer = pd.ExcelWriter(filepath)
+		df.to_excel(writer,'Sheet1',index=False)
+		writer.save()
+		#print('------------')
+		messagebox.showinfo('Sucess','บักทึกข้อมูลสำเร็จ')
+	except:
+		messagebox.showerror('Error','กรุณาปิด Excel ก่อนบันทึกข้อมูล')
+
+def Export_failure():
+
+	try:
+
+		df =pd.read_sql_query("SELECT * FROM weeklytable",conn,)
+		del df['Work']
+		del df['ID']
+
+		filepath = 'C:/Users/Nopphadol/Desktop/Project_beginer/export/my_failuretable.xlsx'
+		writer = pd.ExcelWriter(filepath)
+		df.to_excel(writer,'sheet1',index=False)
+		writer.save()
+		#print('------------')
+		messagebox.showinfo('Sucess','บักทึกข้อมูลสำเร็จ')
+	except:
+		messagebox.showerror('Error','กรุณาปิด Excel ก่อนบันทึกข้อมูล')
+
+'''
 root = Tk()
 
 
@@ -219,7 +248,7 @@ def Save():
 		E1.focus()
 
 	except Exception as e:
-		print('----',e)
+		#print('----',e)
 		#print('โปรดตรวจสอบ:\n Work order ต้องเป็นตัวเลข หรือ\n รูปบแบบวันเวลาต้อง 00:00:00 หรือ\n เลือกจำนวน QTY')
 		messagebox.showerror('ERROR','โปรดตรวจสอบ:\n Work order ต้องเป็นตัวเลข หรือ\n รูปบแบบวันเวลาต้อง 00:00:00 หรือ\n เลือกจำนวน QTY')
 ############### สร้าง TAB ###################
@@ -241,6 +270,7 @@ def update_table_T4():
 	for d in data_dbt4:
 
 		resulttableT4.insert('','end',value=d[1:])
+
 
 
 
@@ -273,20 +303,24 @@ def Save_station():
 
 		Week = Weekstation.get()
 
+		stamp1 = datetime.now()
+		dt = stamp1.strftime('%Y-%m-%d %H:%M:%S')
+		transactionid = stamp1.strftime('%Y%m%d%H%M%f') # สร้าง transection ID
+
 		#print(N2,N3,E1,E4,E5,E6,E9,S2,S3,S5,CEN,QTY,Week)
 
-		insert_week_station(N2,QN2,Week)
-		insert_week_station(N3,QN3,Week)
-		insert_week_station(E1,QE1,Week)
-		insert_week_station(E4,QE4,Week)
-		insert_week_station(E5,QE5,Week)
-		insert_week_station(E6,QE6,Week)
-		insert_week_station(E9,QE9,Week)
-		insert_week_station(S2,QS2,Week)
-		insert_week_station(S3,QS3,Week)
-		insert_week_station(S5,QS5,Week)
-		insert_week_station(CEN,QCEN,Week)
-
+		insert_week_station(transactionid,N2,QN2,Week)
+		insert_week_station(transactionid,N3,QN3,Week)
+		insert_week_station(transactionid,E1,QE1,Week)
+		insert_week_station(transactionid,E4,QE4,Week)
+		insert_week_station(transactionid,E5,QE5,Week)
+		insert_week_station(transactionid,E6,QE6,Week)
+		insert_week_station(transactionid,E9,QE9,Week)
+		insert_week_station(transactionid,S2,QS2,Week)
+		insert_week_station(transactionid,S3,QS3,Week)
+		insert_week_station(transactionid,S5,QS5,Week)
+		insert_week_station(transactionid,CEN,QCEN,Week)
+		
 		QTY_N2.set('QTY_N2')
 		QTY_N3.set('QTY_N3')
 		QTY_E1.set('QTY_E1')
@@ -299,8 +333,10 @@ def Save_station():
 		QTY_S5.set('QTY_S5')
 		QTY_CEN.set('QTY_CEN')
 		Weekstation.set('Week')
-
-	except:
+		update_table_T4()
+		messagebox.showinfo('Successfuly','บันทึกข้อมูลสำเร็จ')
+	except Exception as e:
+		#print(e)
 		messagebox.showerror('Error','กรุณาเลือก QTY เป็นตัวเลขเท่านั้น')
 
 Tab = ttk.Notebook(root)
@@ -313,14 +349,13 @@ Tab.pack(fill=BOTH,expand=1)
 icon_t1 = PhotoImage(file='T1.png') # .subsample(2) ย่อขนาดลง2เท่าใช้ได้กับรูป png เท่านั้น
 icon_t2 = PhotoImage(file='T2.png')
 icon_t3 = PhotoImage(file='T3.png')
+icon_t4 = PhotoImage(file='T4.png')
 icon_b1 = PhotoImage(file='button_save.png')
-btg = PhotoImage(file='button_graph.png')
-
 
 Tab.add(T1,text=f'{"Writer":^{30}}',image=icon_t1,compound='top')
 Tab.add(T2,text=f'{"Table Fault":^{30}}',image=icon_t2,compound='top')
 Tab.add(T3,text=f'{"Station":^{30}}',image=icon_t3,compound='top')
-Tab.add(T4,text=f'{"Table Station":^{30}}',image=icon_t3,compound='top')
+Tab.add(T4,text=f'{"Table Station":^{30}}',image=icon_t4,compound='top')
 '''
 bg = PhotoImage(file='landscape.png')
 my_label = Label(T1,image=bg)
@@ -498,24 +533,14 @@ resulttable.configure(xscrollcommand=hsb.set)
 hsb.pack(fill=X,side=BOTTOM)
 
 alltransection = {}
+alltransectionstation={}
 
 def UpdateSQL():
 	data = list(alltransection.values())
-	print(data)
+	#print(data)
 	#print('UPDATE SQL:',data[0]) # โชว์แค่ 1 record
 	#print('dataupdata',data)
 	for d in data:
-		print(d[0])
-		print(d[1])
-		print(d[2])
-		print(d[3])
-		print(d[4])
-		print(d[5])
-		print(d[6])
-		print(d[7])
-		print(d[8])
-		print(d[9])
-		print(d[10])
 		# transectionid,title,expense,quantity,total
 		# d[0] = 202108300144088343,d[1]= จันทร์-2021-08-30 01:44:52,d[2]มะม่วง,d[3]=30,d[4]=2,d[5]60.0
 		####### เราต้องการเปลี่ยนแค่ d0,2,3,4,5
@@ -736,9 +761,9 @@ Weekstation.current(0)
 LT4 = ttk.Label(F4,text=f'{"ตารางรางแสดงข้อมูล":>{5}}',font=FONT1,foreground='green')
 LT4.pack(pady=20)
 
-Main_icon2 = PhotoImage(file='MainiconT2.png')
-Mainicon2 = Label(F4,image=Main_icon2)
-Mainicon2.pack()
+Main_icon4 = PhotoImage(file='MainiconT2.png')
+Mainicon4 = Label(F4,image=Main_icon2)
+Mainicon4.pack()
 
 s = ttk.Style(F4)
 s.theme_use("clam")
@@ -747,8 +772,8 @@ s.configure(".",font=('Angsana New',14))
 s.configure("Treeview.Heading",foreground='red',font=('Helvetica',8,"bold"))
 
 
-header4 = ['Station','QTY','Week'] # สร้างHeader4
-header4width = [150,150,150]
+header4 = ['transectionid','Station','QTY','Week'] # สร้างHeader4
+header4width = [150,150,150,150]
 
 resulttableT4 = ttk.Treeview(F4,columns=header4,show='headings',height=13) # สร้างTreeview height = 10 คือ จำนวนบรรทัดใน Treeview
 resulttableT4.pack(pady=10)
@@ -775,7 +800,7 @@ def Delete(event=None):
 			#print(data)
 			transectionid = data[0] # ให้ transectionid = รหัสรายการคือ data[0]
 			#print(transectionid)
-			delete_expense(transectionid) ### Delete in DB
+			delete_fuilt(transectionid) ### Delete in DB
 			update_table() # Update data ใหม่่ทั้งหมดอัพโนมัติ
 		else:
 			pass
@@ -783,147 +808,162 @@ def Delete(event=None):
 
 		messagebox.showerror('ERROR','กรุณาเลือกรายการที่จะลบ')
 def Edit_record():
-	POPUP = Toplevel()
-	w = 500 # กว้าง
-	h = 480 # สูง
 
-	ws = POPUP.winfo_screenwidth() #screen width เช็คความกว้างของหน้า
-	hs = POPUP.winfo_screenheight() #screen height
+	try:
 
 
-	x = (ws/2) - (w/2) # ws คือความกว้างของหน้าจอทั้งหมด /2 คือครึ่งหนึ่งคือ CENTER
-	y = (hs/2) - (h/2) - 45
+		POPUP = Toplevel()
+		w = 500 # กว้าง
+		h = 670 # สูง
 
-	POPUP.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
-
-	 ############## T1 ###############
-	L1 = ttk.Label(POPUP,text=f'{"Work order":^{15}}',font=FONT1,foreground='green')
-	L1.pack(ipadx=10)
+		ws = POPUP.winfo_screenwidth() #screen width เช็คความกว้างของหน้า
+		hs = POPUP.winfo_screenheight() #screen height
 
 
-	E1_work = StringVar()
-	E1 = ttk.Entry(POPUP,textvariable=E1_work,font=FONT1)
-	E1.pack(ipadx=27)
+		x = (ws/2) - (w/2) # ws คือความกว้างของหน้าจอทั้งหมด /2 คือครึ่งหนึ่งคือ CENTER
+		y = (hs/2) - (h/2) - 45
 
-	L2 = ttk.Label(POPUP,text=f'{"Time":^{20}}',font=FONT1,foreground='green')
-	L2.pack(ipadx=10)
+		POPUP.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
+		POPUP.title('Edit')
 
-	E2_time = StringVar()
-	E2 = ttk.Entry(POPUP,textvariable=E2_time,font=FONT1)
-	E2.pack(ipadx=27)
+		 ############## EDIT ###############
 
-	L3 = ttk.Label(POPUP,text=f'{"Date":^{20}}',font=FONT1,foreground='green')
-	L3.pack(ipadx=10)
 
-	E3_date = StringVar()
-	E3 = ttk.Entry(POPUP,textvariable=E3_date,font=FONT1)
-	E3.pack(ipadx=27)
+		L1 = ttk.Label(POPUP,text=f'{"Work order":^{15}}',font=FONT1,foreground='green')
+		L1.grid(row=0,column=0,padx=5,pady=14)
 
-	L4 = ttk.Label(POPUP,text=f'{"Station":^{20}}',font=FONT1,foreground='green')
-	L4.pack(ipadx=10)
+		E1_work = StringVar()
+		E1 = ttk.Entry(POPUP,textvariable=E1_work,font=FONT1)
+		E1.grid(row=0,column=1,padx=5,pady=14)
 
-	E4_station = StringVar()
-	E4 = ttk.Entry(POPUP,textvariable=E4_station,font=FONT1)
-	E4.pack(ipadx=27)
+		L2 = ttk.Label(POPUP,text=f'{"Time":^{19}}',font=FONT1,foreground='green')
+		L2.grid(row=1,column=0,padx=5,pady=14)
 
-	L5 = ttk.Label(POPUP,text=f'{"Bound":^{20}}',font=FONT1,foreground='green')
-	L5.pack(ipadx=10)
+		E2_time = StringVar()
+		E2 = ttk.Entry(POPUP,textvariable=E2_time,font=FONT1)
+		E2.grid(row=1,column=1,padx=5,pady=14)
+		#E2.pack(ipadx=27)
 
-	E5_bound = StringVar()
-	E5 = ttk.Entry(POPUP,textvariable=E5_bound,font=FONT1)
-	E5.pack(ipadx=27)
+		L3 = ttk.Label(POPUP,text=f'{"Date":^{20}}',font=FONT1,foreground='green')
+		L3.grid(row=2,column=0,padx=5,pady=14)
 
-	L6 = ttk.Label(POPUP,text=f'{"Door":^{20}}',font=FONT1,foreground='green')
-	L6.pack(ipadx=10)
+		E3_date = StringVar()
+		E3 = ttk.Entry(POPUP,textvariable=E3_date,font=FONT1)
+		E3.grid(row=2,column=1,padx=5,pady=14)
 
-	E6_door = StringVar()
-	E6 = ttk.Entry(POPUP,textvariable=E6_door,font=FONT1)
-	E6.pack(ipadx=27)
+		L4 = ttk.Label(POPUP,text=f'{"Station":^{20}}',font=FONT1,foreground='green')
+		L4.grid(row=3,column=0,padx=5,pady=14)
 
-	L7 = ttk.Label(POPUP,text=f'{"Failure log":^{20}}',font=FONT1,foreground='green')
-	L7.pack(ipadx=10)
+		E4_station = StringVar()
+		E4 = ttk.Entry(POPUP,textvariable=E4_station,font=FONT1)
+		E4.grid(row=3,column=1,padx=5,pady=14)
 
-	E7_failure = StringVar()
-	E7 = ttk.Entry(POPUP,textvariable=E7_failure,font=FONT1)
-	E7.pack(ipadx=27)
+		L5 = ttk.Label(POPUP,text=f'{"Bound":^{20}}',font=FONT1,foreground='green')
+		L5.grid(row=4,column=0,padx=5,pady=14)
 
-	L8 = ttk.Label(POPUP,text=f'{"Cause":^{20}}',font=FONT1,foreground='green')
-	L8.pack(ipadx=10)
+		E5_bound = StringVar()
+		E5 = ttk.Entry(POPUP,textvariable=E5_bound,font=FONT1)
+		E5.grid(row=4,column=1,padx=5,pady=14)
 
-	E8_cause = StringVar()
-	E8 = ttk.Entry(POPUP,textvariable=E8_cause,font=FONT1)
-	E8.pack(ipadx=27)
+		L6 = ttk.Label(POPUP,text=f'{"Door":^{20}}',font=FONT1,foreground='green')
+		L6.grid(row=5,column=0,padx=5,pady=14)
 
-	L9 = ttk.Label(POPUP,text=f'{"Resolution":^{20}}',font=FONT1,foreground='green')
-	L9.pack(ipadx=10)
+		E6_door = StringVar()
+		E6 = ttk.Entry(POPUP,textvariable=E6_door,font=FONT1)
+		E6.grid(row=5,column=1,padx=5,pady=14)
+		#E6.pack(ipadx=27)
 
-	E9_resolution = StringVar()
-	E9 = ttk.Entry(POPUP,textvariable=E9_resolution,font=FONT1)
-	E9.pack(ipadx=27)
+		L7 = ttk.Label(POPUP,text=f'{"Failure log":^{20}}',font=FONT1,foreground='green')
+		#L7.pack(ipadx=10)
+		L7.grid(row=6,column=0,padx=5,pady=14)
+		E7_failure = StringVar()
+		E7 = ttk.Entry(POPUP,textvariable=E7_failure,font=FONT1)
+		#E7.pack(ipadx=27)
+		E7.grid(row=6,column=1,padx=5,pady=14)
 
-	L10 = ttk.Label(POPUP,text=f'{"QTY":^{20}}',font=FONT1,foreground='green')
-	L10.pack(ipadx=10)
+		L8 = ttk.Label(POPUP,text=f'{"Cause":^{20}}',font=FONT1,foreground='green')
+		#L8.pack(ipadx=10)
+		L8.grid(row=7,column=0,padx=5,pady=14)
 
-	E10_qty = StringVar()
-	E10 = ttk.Entry(POPUP,textvariable=E10_qty,font=FONT1)
-	E10.pack(ipadx=27)
+		E8_cause = StringVar()
+		E8 = ttk.Entry(POPUP,textvariable=E8_cause,font=FONT1)
+		#E8.pack(ipadx=27)
+		E8.grid(row=7,column=1,padx=5,pady=14)
+		L9 = ttk.Label(POPUP,text=f'{"Resolution":^{20}}',font=FONT1,foreground='green')
+		#L9.pack(ipadx=10)
+		L9.grid(row=8,column=0,padx=5,pady=14)
 
-	#show_expense()
-	def Edit():
+		E9_resolution = StringVar()
+		E9 = ttk.Entry(POPUP,textvariable=E9_resolution,font=FONT1)
+		#E9.pack(ipadx=27)
+		E9.grid(row=8,column=1,padx=5,pady=14)
 
-		olddata = alltransection[str(transectionid)]
-		#print(olddata)
+		L10 = ttk.Label(POPUP,text=f'{"QTY":^{20}}',font=FONT1,foreground='green')
+		#L10.pack(ipadx=10)
+		L10.grid(row=9,column=0,padx=5,pady=14)
 
+		E10_qty = StringVar()
+		E10 = ttk.Entry(POPUP,textvariable=E10_qty,font=FONT1)
+		#E10.pack(ipadx=27)
+		E10.grid(row=9,column=1,padx=5,pady=14)
+
+		def Edit():
+
+			olddata = alltransection[str(transectionid)]
+			#print(olddata)
+
+			
+			my_workorder  = E1_work.get()
+			my_time = E2_time.get()
+			my_days = E3_date.get()
+			my_station = E4_station.get()
+			my_bound = E5_bound.get()
+			my_door = E6_door.get()
+			my_failure =  E7_failure.get()
+			my_cause = E8_cause.get()
+			my_resolution = E9_resolution.get()
+			my_qty = E10_qty.get()
 		
-		my_workorder  = E1_work.get()
-		my_time = E2_time.get()
-		my_days = E3_date.get()
-		my_station = E4_station.get()
-		my_bound = E5_bound.get()
-		my_door = E6_door.get()
-		my_failure =  E7_failure.get()
-		my_cause = E8_cause.get()
-		my_resolution = E9_resolution.get()
-		my_qty = E10_qty.get()
-	
-		newdata = (olddata[0],my_days,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_resolution,int(my_workorder),int(my_qty)) # ตำแหน่งที่ 0,1 เราไม่ต้องแก้ไข
-		print(newdata)
-		alltransection[str(transectionid)] = newdata
-		#print(alltransection)
-		UpdateSQL()
-		update_table()
-		POPUP.destroy() ########### สั่งปิด POPUP ###################
-		
-	B2 = ttk.Button(POPUP,text=f'{"Save":>{10}}',image=icon_b1,compound='left',command=Edit) #### ให้ไปเรียก function Edit
-	B2.pack(ipadx=50,ipady=20,pady=20)
+			newdata = (olddata[0],my_days,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_resolution,int(my_workorder),int(my_qty)) # ตำแหน่งที่ 0,1 เราไม่ต้องแก้ไข
+			#print(newdata)
+			alltransection[str(transectionid)] = newdata
+			#print(alltransection)
+			UpdateSQL()
+			update_table()
+			POPUP.destroy() ########### สั่งปิด POPUP ###################
+			
+		B2 = ttk.Button(POPUP,text=f'{"Save":>{10}}',image=icon_b1,compound='left',command=Edit) #### ให้ไปเรียก function Edit
+		B2.grid(row=10,column=1,pady=10)
+			
+		#global transectionid
 
-		
-	#global transectionid
-	select = resulttable.selection() # ไปเรียกฟังก์ชั่น พิเศษที่ คลิกใน Treeview
-	#print(select)
-	data = resulttable.item(select) # ดึง Item ที่เราเลือกมา จากตาราง (((ถ้าอยากได้มากว่า 1 รายการให้ Run for lop)))
-	data = data['values'] # ไปดึง values ออกมา ((dic))
-	transectionid = data[0]
-	#print(transectionid)
-	############## ดึงข้อมูลเก่ามาใส่ใน ช่องกรอกที่เราจะแก้ไข ######################
-	E1_work.set(data[9])
-	E2_time.set(data[5])
-	E3_date.set(data[1])
-	E4_station.set(data[2])
-	E5_bound.set(data[3])
-	E6_door.set(data[4])
-	E7_failure.set(data[6])
-	E8_cause.set(data[7])
-	E9_resolution.set(data[8])
-	E10_qty.set(data[10])
+		select = resulttable.selection() # ไปเรียกฟังก์ชั่น พิเศษที่ คลิกใน Treeview
+		#print(select)
+		data = resulttable.item(select) # ดึง Item ที่เราเลือกมา จากตาราง (((ถ้าอยากได้มากว่า 1 รายการให้ Run for lop)))
+		data = data['values'] # ไปดึง values ออกมา ((dic))
+		transectionid = data[0]
+		#print(transectionid)
+		############## ดึงข้อมูลเก่ามาใส่ใน ช่องกรอกที่เราจะแก้ไข ######################
+		E1_work.set(data[9])
+		E2_time.set(data[5])
+		E3_date.set(data[1])
+		E4_station.set(data[2])
+		E5_bound.set(data[3])
+		E6_door.set(data[4])
+		E7_failure.set(data[6])
+		E8_cause.set(data[7])
+		E9_resolution.set(data[8])
+		E10_qty.set(data[10])
 
-	POPUP.mainloop()
+		POPUP.mainloop()
+	except:
 
+		POPUP.destroy()
+		messagebox.showerror('Error','กรุณาเลือกข้อมูลที่จะแก้ไข')
 rightclick = Menu(root,tearoff=0)
-rightclick.add_command(label='Delete',command=Delete) # ไปเรียก function Delete
 rightclick.add_command(label='Edit',command=Edit_record)
-resulttable.bind('<Delete>',Delete) # กดปุ่ม Delete เพื่อลบข้อมูล
-
+rightclick.add_command(label='Delete',command=Delete) # ไปเรียก function Delete
+resulttable.bind('<Delete>',Delete) # กดปุ่ม Delete เพื่อลบข้อมูล	
 
 menuber = Menu(root)
 root.config(menu=menuber)
@@ -935,10 +975,16 @@ filemenu.add_command(label='Submit Work order',command=Save)
 filemenu.add_command(label='Submit Station',command=Save_station)
 filemenu.add_command(label='Exit',command=Exit)
 
-Run = Menu(menuber,tearoff=0)
-menuber.add_cascade(label=f'{"Run":^{5}}',menu=Run) # add label file menuber
-Run.add_command(label=f'{"Plot Grahp Failure":^{5}}',command=pivot_table_1) # เทื่อกดปุ่มให้ไปเรียกฟังก์ชั่น pivot_table_1
-Run.add_command(label=f'{"Plot Grahp Station":^{5}}',command=plot_station)
+Plot = Menu(menuber,tearoff=0)
+menuber.add_cascade(label=f'{"Plot Grahp":^{5}}',menu=Plot) # add label file menuber
+Plot.add_command(label=f'{"Plot Grahp Failure":^{5}}',command=pivot_table_1) # เทื่อกดปุ่มให้ไปเรียกฟังก์ชั่น pivot_table_1
+Plot.add_command(label=f'{"Plot Grahp Station":^{5}}',command=plot_station)
+
+export_excel = Menu(menuber,tearoff=0)
+menuber.add_cascade(label=f'{"Export":^{5}}',menu=export_excel) # add label file menuexcel
+#export_excel.add_command(label=f'{"Export_failure":^{5}}',command=Export_failure)
+#export_excel.add_command(label=f'{"Export_Station":^{5}}',command=Export_station)
+
 
 helpemenu = Menu(menuber,tearoff=0)
 menuber.add_cascade(label=f'{"Help":^{5}}',menu=helpemenu) # add label file menuber
@@ -952,7 +998,6 @@ def menupopup(event=None): # ใส่ Event ด้วยจ๊ะ
 
 		# print(event.x_root,event.y_root) # บอกตำแหน่งของแนวแกน x y 
 		rightclick.post(event.x_root,event.y_root) # บอกตำแหน่งของแนวแกน x y  ที่คลิกใน resulttable
-
 resulttable.bind('<Button-3>',menupopup) # มีการคลิกขวาที่ตาราง resulttable ให้แสดงข้อมูลในfunction menupopup , Button-3 คือคลิก ขวา
 ##################### Right Click Menu ###########################
 
@@ -961,7 +1006,7 @@ left_click = False
 def leftclick(event=None): 
 	global left_click
 	left_click = True   ######### เดี๋ยวมาทำทีหลัง ทำเอง คลิก ซ้ายเลือกก่อนที่จะแสดง POP UP
-	#print(left_click)
+	#print(left_click1)
 
 resulttable.bind('<Button-1>',leftclick)
 
