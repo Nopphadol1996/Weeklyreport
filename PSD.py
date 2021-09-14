@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sqlite3
 from datetime import datetime
-
+import random
 ######### DB #####################
 conn = sqlite3.connect('Weekly.db')
 # สร้างตัวดำเนินการ (อยากได้อะไรใช้ตัวนี้ได้เลย)
@@ -62,12 +62,12 @@ def plot_station():
 		a = df.pivot_table(index='station',columns='week',values='qty')
 		a.plot(kind='bar',stacked=True,figsize=(12,6))
 
-		plt.ylim(0,41)
+		plt.ylim(0,45)
 		plt.grid(axis = 'y')
 		plt.title('Station Report',color='green')
-		plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,fontsize=7)
-		plt.show(block=False) # ให้ผุ็ใช้เปิดได้หลายจอ
-
+		plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.5,fontsize=6)
+		plt.show(block=False)
+		#print(df['week'])
 	except:
 		messagebox.showerror('Error','ไม่มีข้อมูลที่จะแสดง')
 
@@ -99,6 +99,15 @@ def update_expense(transactionid,Date_,Station,Bound,Door,Time_,Failre,Cause,Res
 		#print('Data update')
 #update_expense('202109081423752234','31/01/2021','E1','EB','D07','10:20:31','AMC_S: Obstacle Detection','Door closed too slow','Reset DCU',600600123,5)
 
+def update_T4(transectionid,station,qty,week):
+
+	with conn:
+		########################## ต้องเหมิอนกับในdatabase ###############
+		c.execute("""UPDATE plotstation SET station = ?,qty=?,week = ? WHERE transectionid=?""",
+			([station,qty,week,transectionid]))### Were ID transactionidต้องมาอยู้หลัง
+		conn.commit()
+		#print('Data update')
+#update_T4('2021-09-10 09:41:582',3)
 def delete_fuilt(transactionid):
 	with conn:
 		c.execute("DELETE FROM weeklytable WHERE transactionid=?",([transactionid])) #ใส่เป็น list
@@ -208,7 +217,8 @@ def Save():
 	textdate  = my_days+'/'+my_months+'/'+my_years
 	stamp = datetime.now()
 	dt = stamp.strftime('%Y-%m-%d %H:%M:%S')
-	transactionid = stamp.strftime('%Y%m%d%H%M%f') # สร้าง transection ID
+	#transactionid = stamp.strftime('%Y%m%d%H%M%f') # สร้าง transection ID
+	transactionid = stamp.strftime('%Y-%m-%d %H:%M:%S') # สร้าง transection ID
 	#print(type(transactionid))
 
 	#text = '{} {} {} {} {} {} {} {} {} {} '.format(transactionid,textdate,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_Maintenance,my_workorder,my_qty)
@@ -258,18 +268,19 @@ def update_table():
 
 	resulttable.delete(*resulttable.get_children())
 	data_db = show_expense()
+	#print(data_db[0:])
 	#insert_work(textdate,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_Maintenance,int(my_workorder),int(my_qty))
 	for d in data_db:
 		alltransection[d[1]] = d[1:]
-		resulttable.insert('','end',value=d[1:])
+		resulttable.insert('','end',value=d[1:]) # :2 ไม่เอา transactionid มาแสดง แต่จะไม่สามารถแก้ไขได้หรือลบได้
 
 def update_table_T4():
 
 	resulttableT4.delete(*resulttableT4.get_children())
 	data_dbt4 = show_station_week()
 	for d in data_dbt4:
-
-		resulttableT4.insert('','end',value=d[1:])
+		alltransectionstation_T4[d[1]] = d[1:]
+		resulttableT4.insert('',0,value=d[1:]) # :2 ไม่เอา transactionid มาแสดง แต่จะไม่สามารถแก้ไขได้หรือลบได้
 
 
 
@@ -305,22 +316,49 @@ def Save_station():
 
 		stamp1 = datetime.now()
 		dt = stamp1.strftime('%Y-%m-%d %H:%M:%S')
-		transactionid = stamp1.strftime('%Y%m%d%H%M%f') # สร้าง transection ID
+		#print(dt)
+		#transactionid = stamp1.strftime('%Y-%m-%d-%H-%M-%f') # สร้าง transection ID
+		transactionid = stamp1.strftime('%Y-%m-%d %H:%M:%S') # สร้าง transection ID
 
 		#print(N2,N3,E1,E4,E5,E6,E9,S2,S3,S5,CEN,QTY,Week)
+		rn2 = random.randint(0,0)
+		rn3 = random.randint(1,1)
+		re1 = random.randint(2,2)
+		re2 = random.randint(3,3)
+		re4 = random.randint(4,4)
+		re5 = random.randint(5,5)
+		re6 = random.randint(6,6)
+		re9 = random.randint(7,7)
+		rs2 = random.randint(8,8)
+		rs3 = random.randint(9,9)
+		rs5 = random.randint(10,10)
+		rscen = random.randint(11,11)
 
-		insert_week_station(transactionid,N2,QN2,Week)
-		insert_week_station(transactionid,N3,QN3,Week)
-		insert_week_station(transactionid,E1,QE1,Week)
-		insert_week_station(transactionid,E4,QE4,Week)
-		insert_week_station(transactionid,E5,QE5,Week)
-		insert_week_station(transactionid,E6,QE6,Week)
-		insert_week_station(transactionid,E9,QE9,Week)
-		insert_week_station(transactionid,S2,QS2,Week)
-		insert_week_station(transactionid,S3,QS3,Week)
-		insert_week_station(transactionid,S5,QS5,Week)
-		insert_week_station(transactionid,CEN,QCEN,Week)
-		
+		transactioni_n2 = transactionid + ':' + str(rn2)
+		transactioni_n3 = transactionid + ':' + str(rn3)
+		transactioni_e1 = transactionid + ':' + str (re1)
+		transactioni_e4 = transactionid + ':' + str(re4)
+		transactioni_e5 = transactionid + ':' + str(re5)
+		transactioni_e6 = transactionid + ':' + str(re6)
+		transactioni_e9 = transactionid + ':' + str(re9)
+		transactioni_es2 = transactionid + ':'+ str(rs2)
+		transactioni_es3 = transactionid + ':'+ str(rs3)
+		transactioni_es5 = transactionid + ':'+ str(rs5)
+		transactioni_CEN = transactionid + ':'+ str(rscen)
+
+
+		insert_week_station(transactioni_n2,N2,QN2,Week)
+		insert_week_station(transactioni_n3,N3,QN3,Week)
+		insert_week_station(transactioni_e1,E1,QE1,Week)
+		insert_week_station(transactioni_e4,E4,QE4,Week)
+		insert_week_station(transactioni_e5,E5,QE5,Week)
+		insert_week_station(transactioni_e6,E6,QE6,Week)
+		insert_week_station(transactioni_e9,E9,QE9,Week)
+		insert_week_station(transactioni_es2,S2,QS2,Week)
+		insert_week_station(transactioni_es3,S3,QS3,Week)
+		insert_week_station(transactioni_es5,S5,QS5,Week)
+		insert_week_station(transactioni_CEN,CEN,QCEN,Week)
+
 		QTY_N2.set('QTY_N2')
 		QTY_N3.set('QTY_N3')
 		QTY_E1.set('QTY_E1')
@@ -336,7 +374,8 @@ def Save_station():
 		update_table_T4()
 		messagebox.showinfo('Successfuly','บันทึกข้อมูลสำเร็จ')
 	except Exception as e:
-		#print(e)
+		print(e)
+		transactioni_r = transactionid + str(r)
 		messagebox.showerror('Error','กรุณาเลือก QTY เป็นตัวเลขเท่านั้น')
 
 Tab = ttk.Notebook(root)
@@ -459,7 +498,7 @@ Doorchoosen.current(0)
 Failure = StringVar()
 Failurechoosen = ttk.Combobox(F1, width = 50,textvariable=Failure,state='readonly')
 Failurechoosen['values'] = ('Failure log',
-					 'AMC_M: Obstacle Detection ,DMC:Obstacle Detection inconsistency between DMC_AMC M and AMC S',
+					 	  'AMC_M: Obstacle Detection ,DMC:Obstacle Detection inconsistency between DMC_AMC M and AMC S',
                           'AMC_S: Obstacle Detection',
                           'AMC_S: Reset AMC_M:Reset',
                           'DMC:ASD close too slow')
@@ -470,12 +509,9 @@ Cause = StringVar()
 Causeechoosen = ttk.Combobox(F1, width = 50,textvariable=Cause,state='readonly')
 Causeechoosen['values'] = ('Cause',
 					 'Software error',
-					 'The door(m) obstacle',
-					 'The door(m)not open',
-					 'The door(s)not open',
-					 'The door(s)not closed',
-                          'The door not open',
-                          'The door closed too slow')
+					 'The door not close',
+					 'The door not open',
+                     'The door closed too slow',)
 Causeechoosen.pack(pady=2)
 Causeechoosen.current(0)
 
@@ -512,7 +548,7 @@ s.configure(".",font=('Angsana New',14))
 s.configure("Treeview.Heading",foreground='red',font=('Helvetica',8,"bold"))
 
 
-header = ['transactionid','Date','Station','Bound','Door','Time','Failure log','Cause','Resolution','Work order','QTY'] # สร้างHeader
+header = ['Record date','Date','Station','Bound','Door','Time','Failure log','Cause','Resolution','Work order','QTY'] # สร้างHeader
 headerwidth = [120,70,50,50,45,50,550,200,110,80,30]
 
 resulttable = ttk.Treeview(F2,columns=header,show='headings',height=13) # สร้างTreeview height = 10 คือ จำนวนบรรทัดใน Treeview
@@ -533,7 +569,7 @@ resulttable.configure(xscrollcommand=hsb.set)
 hsb.pack(fill=X,side=BOTTOM)
 
 alltransection = {}
-alltransectionstation={}
+alltransectionstation_T4 = {}
 
 def UpdateSQL():
 	data = list(alltransection.values())
@@ -544,8 +580,15 @@ def UpdateSQL():
 		# transectionid,title,expense,quantity,total
 		# d[0] = 202108300144088343,d[1]= จันทร์-2021-08-30 01:44:52,d[2]มะม่วง,d[3]=30,d[4]=2,d[5]60.0
 		####### เราต้องการเปลี่ยนแค่ d0,2,3,4,5
-		update_expense(d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10]) #ไปเรียก function update_expense มีจำนวน 6 ฟิว ใน database 
+		print(d[0])
+		update_expense(d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10]) #ไปเรียก function update_expense มีจำนวน 6 ฟิว ใน database ไม่ต้องรวม ID
 
+def UpdateSQL_T4():
+	data1 = list(alltransectionstation_T4.values())
+
+	for d1 in data1:
+
+		update_T4(d1[0],d1[1],d1[2],d1[3]) #ไปเรียก function update_T4 มีจำนวน ? ฟิว ใน database ไม่ต้องรวมID
 
 ############################## F3 ################################
 LT2 = ttk.Label(F3,text=f'{"Station":^{10}}',font=FONT1,foreground='red')
@@ -651,7 +694,7 @@ QTY_N2 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYTN2,state='readonly')
 
 QTY_N2['values'] = ('QTY_N2', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_N2.grid(row=1,column=1,padx=10,pady=20)
 QTY_N2.current(0)
 
@@ -661,7 +704,7 @@ QTY_N3 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYN3,state='readonly')
 
 QTY_N3['values'] = ('QTY_N3', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_N3.grid(row=2,column=1,padx=1,pady=10)
 QTY_N3.current(0)
 
@@ -670,7 +713,7 @@ QTY_E1 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYE1,state='readonly')
 
 QTY_E1['values'] = ('QTY_E1', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_E1.grid(row=3,column=1,padx=1,pady=10)
 QTY_E1.current(0)
 
@@ -679,7 +722,7 @@ QTY_E4 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYE4,state='readonly')
 
 QTY_E4['values'] = ('QTY_E4', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_E4.grid(row=4,column=1,padx=1,pady=10)
 QTY_E4.current(0)
 
@@ -688,7 +731,7 @@ QTY_E5 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYE5,state='readonly')
 
 QTY_E5['values'] = ('QTY_E5', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_E5.grid(row=5,column=1,padx=1,pady=10)
 QTY_E5.current(0)
 
@@ -697,7 +740,7 @@ QTY_E6 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYE6,state='readonly')
 
 QTY_E6['values'] = ('QTY_E6', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_E6.grid(row=6,column=1,padx=1,pady=10)
 QTY_E6.current(0)
 
@@ -706,7 +749,7 @@ QTY_E9 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYE9,state='readonly')
 
 QTY_E9['values'] = ('QTY_E9', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_E9.grid(row=7,column=1,padx=1,pady=10)
 QTY_E9.current(0)
 
@@ -715,7 +758,7 @@ QTY_S2 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYS2,state='readonly')
 
 QTY_S2['values'] = ('QTY_S2', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_S2.grid(row=8,column=1,padx=1,pady=10)
 QTY_S2.current(0)
 
@@ -724,7 +767,7 @@ QTY_S3 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYS3,state='readonly')
 
 QTY_S3['values'] = ('QTY_S3', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_S3.grid(row=9,column=1,padx=1,pady=10)
 QTY_S3.current(0)
 
@@ -733,7 +776,7 @@ QTY_S5 = ttk.Combobox(F3, width = 50,
                             textvariable = QTYS5,state='readonly')
 
 QTY_S5['values'] = ('QTY_S5', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_S5.grid(row=10,column=1,padx=1,pady=10)
 QTY_S5.current(0)
 
@@ -742,7 +785,7 @@ QTY_CEN = ttk.Combobox(F3, width = 50,
                             textvariable = QTYCEN,state='readonly')
 
 QTY_CEN['values'] = ('QTY_CEN', 
-                          '0','1','2','3','4','5')
+                          '0','1','2','3','4','5','6','7','8','9','10')
 QTY_CEN.grid(row=11,column=1,padx=1,pady=10)
 QTY_CEN.current(0)
 
@@ -753,7 +796,9 @@ Weekstation = ttk.Combobox(F3, width = 50,
 Weekstation['values'] = ('Week', 
                           'Week01','Week02','Week03','Week04','Week05','Week06','Week07','Week08','Week09','Week10',
                           'Week11','Week12','Week13','Week14','Week15','Week16','Week17','Week18','Week19','Week20',
-                          'Week21','Week22','Week23','Week24','Week25','Week26','Week27','Week28','Week29','Week30','Week31')
+                          'Week21','Week22','Week23','Week24','Week25','Week26','Week27','Week28','Week29','Week30','Week31',
+                          'Week32','Week33','Week34','Week35','Week36','Week37','Week38','Week39','Week40','Week41','Week42',
+                          'Week43')
 Weekstation.grid(row=1,column=2,padx=1,pady=10)
 Weekstation.current(0)
 
@@ -772,7 +817,7 @@ s.configure(".",font=('Angsana New',14))
 s.configure("Treeview.Heading",foreground='red',font=('Helvetica',8,"bold"))
 
 
-header4 = ['transectionid','Station','QTY','Week'] # สร้างHeader4
+header4 = ['Record date','Staion','QTY','Week'] # สร้างHeader4
 header4width = [150,150,150,150]
 
 resulttableT4 = ttk.Treeview(F4,columns=header4,show='headings',height=13) # สร้างTreeview height = 10 คือ จำนวนบรรทัดใน Treeview
@@ -887,30 +932,27 @@ def Edit_record():
 
 		E8_cause = StringVar()
 		E8 = ttk.Entry(POPUP,textvariable=E8_cause,font=FONT1)
-		#E8.pack(ipadx=27)
 		E8.grid(row=7,column=1,padx=5,pady=14)
+
 		L9 = ttk.Label(POPUP,text=f'{"Resolution":^{20}}',font=FONT1,foreground='green')
-		#L9.pack(ipadx=10)
 		L9.grid(row=8,column=0,padx=5,pady=14)
 
 		E9_resolution = StringVar()
 		E9 = ttk.Entry(POPUP,textvariable=E9_resolution,font=FONT1)
-		#E9.pack(ipadx=27)
 		E9.grid(row=8,column=1,padx=5,pady=14)
 
 		L10 = ttk.Label(POPUP,text=f'{"QTY":^{20}}',font=FONT1,foreground='green')
-		#L10.pack(ipadx=10)
 		L10.grid(row=9,column=0,padx=5,pady=14)
 
 		E10_qty = StringVar()
 		E10 = ttk.Entry(POPUP,textvariable=E10_qty,font=FONT1)
-		#E10.pack(ipadx=27)
 		E10.grid(row=9,column=1,padx=5,pady=14)
 
 		def Edit():
 
+			#print(alltransection)
 			olddata = alltransection[str(transectionid)]
-			#print(olddata)
+			#print('',olddata[0])
 
 			
 			my_workorder  = E1_work.get()
@@ -925,9 +967,7 @@ def Edit_record():
 			my_qty = E10_qty.get()
 		
 			newdata = (olddata[0],my_days,my_station,my_bound,my_door,my_time,my_failure,my_cause,my_resolution,int(my_workorder),int(my_qty)) # ตำแหน่งที่ 0,1 เราไม่ต้องแก้ไข
-			#print(newdata)
 			alltransection[str(transectionid)] = newdata
-			#print(alltransection)
 			UpdateSQL()
 			update_table()
 			POPUP.destroy() ########### สั่งปิด POPUP ###################
@@ -935,7 +975,6 @@ def Edit_record():
 		B2 = ttk.Button(POPUP,text=f'{"Save":>{10}}',image=icon_b1,compound='left',command=Edit) #### ให้ไปเรียก function Edit
 		B2.grid(row=10,column=1,pady=10)
 			
-		#global transectionid
 
 		select = resulttable.selection() # ไปเรียกฟังก์ชั่น พิเศษที่ คลิกใน Treeview
 		#print(select)
@@ -960,10 +999,65 @@ def Edit_record():
 
 		POPUP.destroy()
 		messagebox.showerror('Error','กรุณาเลือกข้อมูลที่จะแก้ไข')
-rightclick = Menu(root,tearoff=0)
-rightclick.add_command(label='Edit',command=Edit_record)
-rightclick.add_command(label='Delete',command=Delete) # ไปเรียก function Delete
-resulttable.bind('<Delete>',Delete) # กดปุ่ม Delete เพื่อลบข้อมูล	
+
+def Edit_recordT4():
+
+	POPUP_T4 = Toplevel()
+	w = 500 # กว้าง
+	h = 400 # สูง
+
+	ws = POPUP_T4.winfo_screenwidth() #screen width เช็คความกว้างของหน้า
+	hs = POPUP_T4.winfo_screenheight() #screen height
+
+
+	x = (ws/2) - (w/2) # ws คือความกว้างของหน้าจอทั้งหมด /2 คือครึ่งหนึ่งคือ CENTER
+	y = (hs/2) - (h/2) - 45
+
+	POPUP_T4.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
+	POPUP_T4.title('Edit')
+
+	
+
+	L1T4 = ttk.Label(POPUP_T4,text=f'{"QTY":^{20}}',font=FONT1,foreground='green')
+	L1T4.grid(row=0,column=1,pady=10,padx=3)
+
+	E1T4_station = StringVar()
+	E1T4 = ttk.Entry(POPUP_T4,textvariable=E1T4_station,font=FONT1,foreground='green')
+	E1T4.grid(row=0,column=2,pady=10)
+
+	def Edit_T4():
+
+
+		#print(alltransectionstation_T4)
+		#print(transectionid1)
+		olddata1 = alltransectionstation_T4[str(transectionid1)] # อย่าลืมไปใส่ใน function updata _table _t4 ก่อน
+		my_qty_t4 = E1T4_station.get()
+
+		newdata1 = (olddata1[0],olddata1[1],int(my_qty_t4),olddata1[3]) # ตำแหน่งที่ 0,1 เราไม่ต้องแก้ไข
+		#print('oldata = ',olddata1)
+		alltransectionstation_T4[str(transectionid1)] = newdata1
+		#print(alltransectionstation_T4)
+
+		UpdateSQL_T4()
+		update_table_T4()
+		#print('Successfuly')
+
+		POPUP_T4.destroy()
+		
+
+	B2 = ttk.Button(POPUP_T4,text=f'{"Save":>{10}}',image=icon_b1,compound='left',command=Edit_T4) #### ให้ไปเรียก function Edit
+	B2.grid(row=10,column=1,pady=10)
+
+	select_T4 = resulttableT4.selection() # ไปเรียกฟังก์ชั่น พิเศษที่ คลิกใน Treeview
+	data1 = resulttableT4.item(select_T4)
+	data1 = data1['values'] # ไปดึง values ออกมา ((dic))
+	#print(data1)
+	transectionid1 = data1[0] # ให้ transactionid = รหัสรายการคือ data1[0]
+	#print(transectionid1)
+	E1T4_station.set(data1[2])
+
+	POPUP_T4.mainloop()
+
 
 menuber = Menu(root)
 root.config(menu=menuber)
@@ -991,6 +1085,16 @@ menuber.add_cascade(label=f'{"Help":^{5}}',menu=helpemenu) # add label file menu
 helpemenu.add_command(label=f'{"About":^{5}}',command=About) # เทื่อกดปุ่มให้ไปเรียกฟังก์ชั่น About
 
 
+##### สร้าง menu click 
+rightclick = Menu(root,tearoff=0)
+rightclick.add_command(label='Edit',command=Edit_record)
+rightclick.add_command(label='Delete',command=Delete) # ไปเรียก function Delete
+resulttable.bind('<Delete>',Delete) # กดปุ่ม Delete เพื่อลบข้อมูล
+
+rightclick_T4 = Menu(root,tearoff=0)
+rightclick_T4.add_command(label='Edit',command=Edit_recordT4)
+
+
 
 def menupopup(event=None): # ใส่ Event ด้วยจ๊ะ
 
@@ -1001,15 +1105,32 @@ def menupopup(event=None): # ใส่ Event ด้วยจ๊ะ
 resulttable.bind('<Button-3>',menupopup) # มีการคลิกขวาที่ตาราง resulttable ให้แสดงข้อมูลในfunction menupopup , Button-3 คือคลิก ขวา
 ##################### Right Click Menu ###########################
 
+def menupopup_T4(event=None): # ใส่ Event ด้วยจ๊ะ
+
+	if left_click_T4 == True: ######### เดี๋ยวมาทำทีหลัง ทำเอง คลิก ซ้ายเลือกก่อนที่จะแสดง POP UP
+
+		# print(event.x_root,event.y_root) # บอกตำแหน่งของแนวแกน x y 
+		rightclick_T4.post(event.x_root,event.y_root) # บอกตำแหน่งของแนวแกน x y  ที่คลิกใน resulttable
+resulttableT4.bind('<Button-3>',menupopup_T4) # มีการคลิกขวาที่ตาราง resulttable ให้แสดงข้อมูลในfunction menupopup , Button-3 คือคลิก ขวา
+##################### Right Click Menu ###########################
+
+
 left_click = False
+left_click_T4 = False
+
 
 def leftclick(event=None): 
 	global left_click
 	left_click = True   ######### เดี๋ยวมาทำทีหลัง ทำเอง คลิก ซ้ายเลือกก่อนที่จะแสดง POP UP
 	#print(left_click1)
 
-resulttable.bind('<Button-1>',leftclick)
+def leftclick1(event=None): 
+	global left_click_T4
+	left_click_T4 = True   ######### เดี๋ยวมาทำทีหลัง ทำเอง คลิก ซ้ายเลือกก่อนที่จะแสดง POP UP
+	#print(left_click1)
 
+resulttable.bind('<Button-1>',leftclick)
+resulttableT4.bind('<Button-1>',leftclick1)
 update_table()
 update_table_T4()
 root.mainloop()
